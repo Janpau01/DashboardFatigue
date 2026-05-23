@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-
 import plotly.express as px
 
 # =========================================================
@@ -15,13 +14,12 @@ st.set_page_config(
 )
 
 # =========================================================
-# LOAD DATASET CORE
+# LOAD DATASET
 # =========================================================
 
 @st.cache_data
 def load_data():
 
-    # DATASET CORE
     df = pd.read_csv(
         "data/screen_time_mentalwellness.csv"
     )
@@ -54,10 +52,7 @@ def load_data():
         'exercise_minutes',
 
         'caffeine_intake_mg_per_day':
-        'caffeine',
-
-        'age':
-        'age'
+        'caffeine'
     })
 
     # =====================================================
@@ -86,13 +81,13 @@ def load_data():
     )
 
     # =====================================================
-    # SAMPLE DATA AGAR STREAMLIT CEPAT
+    # SAMPLE DATA
     # =====================================================
 
-    if len(df) > 5000:
+    if len(df) > 1000:
 
         df = df.sample(
-            5000,
+            1000,
             random_state=42
         )
 
@@ -110,12 +105,6 @@ st.markdown("""
 
 .main {
     background-color: #0E1117;
-}
-
-.metric-box {
-    background-color: #1E293B;
-    padding: 20px;
-    border-radius: 15px;
 }
 
 .insight-box {
@@ -139,7 +128,7 @@ st.markdown("""
 
 .medium-font {
     font-size: 18px;
-    line-height: 1.8;
+    line-height: 1.6;
 }
 
 </style>
@@ -152,7 +141,7 @@ st.markdown("""
 st.title("🧠 Dashboard Analisis Kelelahan Kognitif")
 
 st.markdown("""
-Dashboard ini digunakan untuk menganalisis hubungan aktivitas digital harian Anda terhadap:
+Dashboard ini digunakan untuk menganalisis hubungan aktivitas digital harian terhadap:
 
 - tingkat stres,
 - kualitas tidur,
@@ -166,34 +155,24 @@ st.markdown("---")
 # TABS
 # =========================================================
 
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📌 Ringkasan",
     "📊 Analisis",
-    "🤖 Deteksi AI"
+    "🧠 Deteksi Kelelahan",
+    "📝 Catatan Dashboard"
 ])
 
 # =========================================================
-# TAB 1 — RINGKASAN
+# TAB 1
 # =========================================================
 
 with tab1:
 
     st.header("📌 Ringkasan Utama")
 
-    avg_screen = round(
-        df['screen_time'].mean(),
-        2
-    )
-
-    avg_sleep = round(
-        df['sleep_hours'].mean(),
-        2
-    )
-
-    avg_stress = round(
-        df['stress_level'].mean(),
-        2
-    )
+    avg_screen = round(df['screen_time'].mean(), 2)
+    avg_sleep = round(df['sleep_hours'].mean(), 2)
+    avg_stress = round(df['stress_level'].mean(), 2)
 
     high_risk = len(
         df[df['fatigue_category'] == 'Tinggi']
@@ -204,15 +183,11 @@ with tab1:
         1
     )
 
-    # =====================================================
-    # METRIC
-    # =====================================================
-
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         st.metric(
-            "Rata-rata Screen Time",
+            "Rata-rata Penggunaan Gadget",
             f"{avg_screen} jam"
         )
 
@@ -236,16 +211,12 @@ with tab1:
 
     st.markdown("---")
 
-    # =====================================================
-    # INSIGHT
-    # =====================================================
-
     st.subheader("🔍 Insight Utama")
 
     col1, col2 = st.columns([1.5, 1])
 
     # =====================================================
-    # VISUALISASI
+    # CHART
     # =====================================================
 
     with col1:
@@ -255,8 +226,14 @@ with tab1:
             x='screen_time',
             y='fatigue_score',
             color='stress_level',
-            title='Hubungan Screen Time dan Kelelahan Kognitif',
+            title='Hubungan Penggunaan Gadget dan Kelelahan Kognitif',
             opacity=0.6
+        )
+
+        fig.update_layout(
+            paper_bgcolor="#0E1117",
+            plot_bgcolor="#0E1117",
+            font_color="white"
         )
 
         st.plotly_chart(
@@ -265,7 +242,7 @@ with tab1:
         )
 
     # =====================================================
-    # INSIGHT BOX
+    # INSIGHT
     # =====================================================
 
     with col2:
@@ -279,11 +256,11 @@ with tab1:
 
         <p class="medium-font">
 
-        • {risk_percent}% pengguna memiliki risiko fatigue tinggi.
+        • {risk_percent}% responden memiliki risiko fatigue tinggi.
 
         <br>
 
-        • Pengguna dengan screen time tinggi mengalami peningkatan stres.
+        • Responden dengan penggunaan gadget tinggi mengalami peningkatan stres.
 
         <br>
 
@@ -298,60 +275,8 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-        # =================================================
-        # PENJELASAN FATIGUE
-        # =================================================
-
-        st.markdown("""
-        <div style="
-        background-color:#111827;
-        padding:20px;
-        border-radius:15px;
-        border-left:5px solid #3B82F6;
-        margin-top:20px;
-        ">
-
-        <p style="
-        font-size:26px;
-        font-weight:bold;
-        margin-bottom:15px;
-        ">
-
-        📘 Penjelasan Cognitive Fatigue
-
-        </p>
-
-        <p style="
-        font-size:17px;
-        line-height:1.8;
-        ">
-
-        <b>Cognitive fatigue</b> atau kelelahan kognitif merupakan kondisi
-        penurunan kemampuan mental akibat aktivitas digital berlebihan,
-        kurang tidur, peningkatan stres, serta overload informasi digital.
-
-        <br><br>
-
-        Kondisi ini dapat menyebabkan:
-
-        <ul>
-        <li>Penurunan fokus dan konsentrasi</li>
-        <li>Produktivitas kerja menurun</li>
-        <li>Kesulitan mengambil keputusan</li>
-        <li>Kelelahan mental (mental exhaustion)</li>
-        <li>Peningkatan risiko burnout</li>
-        </ul>
-
-        Semakin tinggi tingkat fatigue pengguna, maka semakin besar risiko
-        terjadinya gangguan performa kognitif dan kesehatan mental.
-
-        </p>
-
-        </div>
-        """, unsafe_allow_html=True)
-
 # =========================================================
-# TAB 2 — ANALISIS
+# TAB 2
 # =========================================================
 
 with tab2:
@@ -374,6 +299,12 @@ with tab2:
             title='Durasi Tidur vs Tingkat Stres'
         )
 
+        fig2.update_layout(
+            paper_bgcolor="#0E1117",
+            plot_bgcolor="#0E1117",
+            font_color="white"
+        )
+
         st.plotly_chart(
             fig2,
             use_container_width=True
@@ -393,6 +324,12 @@ with tab2:
             title='Fatigue vs Produktivitas'
         )
 
+        fig3.update_layout(
+            paper_bgcolor="#0E1117",
+            plot_bgcolor="#0E1117",
+            font_color="white"
+        )
+
         st.plotly_chart(
             fig3,
             use_container_width=True
@@ -400,36 +337,60 @@ with tab2:
 
     st.markdown("---")
 
-    # =====================================================
-    # DISTRIBUSI FATIGUE
-    # =====================================================
-
     col1, col2 = st.columns(2)
 
-    with col1:
+# =====================================================
+# PIE CHART
+# =====================================================
 
-        fatigue_distribution = (
-            df['fatigue_category']
-            .value_counts()
-            .reset_index()
-        )
+with col1:
 
-        fatigue_distribution.columns = [
-            'Kategori',
-            'Jumlah'
-        ]
+    fatigue_distribution = (
+        df['fatigue_category']
+        .value_counts()
+        .reset_index()
+    )
 
-        fig4 = px.pie(
-            fatigue_distribution,
-            values='Jumlah',
-            names='Kategori',
-            title='Distribusi Tingkat Fatigue'
-        )
+    fatigue_distribution.columns = [
+        'Kategori_Asli',
+        'Jumlah'
+    ]
 
-        st.plotly_chart(
-            fig4,
-            use_container_width=True
-        )
+    # =================================================
+    # RENAME LABEL
+    # =================================================
+
+    fatigue_distribution['Kategori'] = (
+        fatigue_distribution['Kategori_Asli']
+        .replace({
+
+            'Tinggi':
+            '🔴 Near-Burnout',
+
+            'Sedang':
+            '🟡 Strained',
+
+            'Rendah':
+            '🟢 Refreshed'
+        })
+    )
+
+    fig4 = px.pie(
+        fatigue_distribution,
+        values='Jumlah',
+        names='Kategori',
+        title='Distribusi Kondisi Mental'
+    )
+
+    fig4.update_layout(
+        paper_bgcolor="#0E1117",
+        font_color="white"
+    )
+
+    st.plotly_chart(
+        fig4,
+        use_container_width=True
+    )
 
     # =====================================================
     # KESIMPULAN ANALISIS
@@ -472,26 +433,26 @@ with tab2:
 
         <p class="medium-font">
 
-        • Sebanyak <b>{tinggi}%</b> pengguna berada pada kategori 
-        <b>fatigue tinggi</b>, yang menunjukkan tingginya risiko 
-        kelelahan mental akibat aktivitas digital berlebihan.
+        • Sebanyak <b>{tinggi}%</b> responden berada pada kondisi
+        <b>🔴 Near-Burnout</b>, yang menunjukkan tingkat
+        kelelahan mental tinggi akibat aktivitas digital berlebihan.
 
         <br><br>
 
-        • Sebanyak <b>{sedang}%</b> pengguna berada pada kategori 
-        <b>fatigue sedang</b>, yang menunjukkan mulai munculnya 
-        penurunan fokus dan produktivitas.
+        • Sebanyak <b>{sedang}%</b> responden berada pada kondisi
+        <b>🟡 Strained</b>, yang menunjukkan mulai munculnya
+        tekanan mental dan penurunan fokus.
 
         <br><br>
 
-        • Sebanyak <b>{rendah}%</b> pengguna berada pada kategori 
-        <b>fatigue rendah</b>, yang menunjukkan kondisi mental 
+        • Sebanyak <b>{rendah}%</b> responden berada pada kondisi
+        <b>🟢 Refreshed</b>, yang menunjukkan kondisi mental
         relatif stabil dan sehat.
 
         <br><br>
 
-        • Aktivitas digital berlebihan, durasi tidur rendah, dan tingkat stres tinggi 
-        merupakan faktor utama peningkatan cognitive fatigue.
+        • Aktivitas digital berlebihan dan kurang tidur
+        menjadi faktor utama peningkatan cognitive fatigue.
 
         </p>
 
@@ -499,21 +460,16 @@ with tab2:
         """, unsafe_allow_html=True)
 
 # =========================================================
-# TAB 3 — DETEKSI AI
+# TAB 3
 # =========================================================
 
 with tab3:
 
-    st.header("🤖 Deteksi Dini Kelelahan Kognitif")
+    st.header("🧠 Deteksi Dini Kelelahan Kognitif")
 
     st.markdown("""
     Masukkan aktivitas harian Anda untuk mendeteksi tingkat kelelahan kognitif.
     """)
-
-
-    # =====================================================
-    # FORM
-    # =====================================================
 
     with st.form("fatigue_form"):
 
@@ -522,7 +478,7 @@ with tab3:
         with col1:
 
             screen_time = st.slider(
-                "Durasi Screen Time (jam/hari)",
+                "Durasi Penggunaan Gadget (jam/hari)",
                 0.0,
                 24.0,
                 7.0
@@ -570,7 +526,7 @@ with tab3:
         )
 
     # =====================================================
-    # HASIL
+    # OUTPUT
     # =====================================================
 
     if submitted:
@@ -596,39 +552,48 @@ with tab3:
         )
 
         # =================================================
-        # KATEGORI
+        # STATUS FATIGUE
         # =================================================
 
         if fatigue_percent < 40:
 
-            category = "🟢 Fatigue Rendah"
+            category = "🟢 Refreshed"
 
             explanation = """
-            Kondisi pengguna masih cukup sehat dan stabil.
+            Kondisi mental Anda masih stabil,
+            fokus masih terjaga,
+            dan aktivitas digital belum memberikan
+            tekanan kognitif berlebihan.
             """
 
         elif fatigue_percent < 70:
 
-            category = "🟡 Fatigue Sedang"
+            category = "🟡 Strained"
 
             explanation = """
-            Pengguna mulai mengalami kelelahan kognitif ringan.
+            Anda mulai mengalami tekanan mental
+            dan kelelahan kognitif ringan akibat
+            aktivitas digital dan stres harian.
             """
 
         else:
 
-            category = "🔴 Fatigue Tinggi"
+            category = "🔴 Near-Burnout"
 
             explanation = """
-            Pengguna mengalami tingkat kelelahan kognitif tinggi.
+            Kondisi mental Anda menunjukkan tanda-tanda
+            kelelahan tinggi dan mendekati burnout.
+
+            Disarankan untuk segera melakukan
+            recovery dan mengurangi overstimulasi digital.
             """
 
         st.markdown(f"## {category}")
 
-        st.info(explanation)
+        st.warning(explanation)
 
         # =================================================
-        # REKOMENDASI
+        # REKOMENDASI CERDAS
         # =================================================
 
         st.header("💡 Rekomendasi Cerdas")
@@ -636,45 +601,333 @@ with tab3:
         recommendations = []
 
         if screen_time > 8:
+
             recommendations.append(
-                "Kurangi screen time harian."
+                "Kurangi penggunaan gadget harian."
             )
 
         if sleep_hours < 6:
+
             recommendations.append(
                 "Tingkatkan kualitas tidur menjadi 7–8 jam."
             )
 
         if stress_level > 7:
+
             recommendations.append(
                 "Lakukan manajemen stres dan relaksasi."
             )
 
         if social_media > 6:
+
             recommendations.append(
                 "Batasi penggunaan media sosial."
             )
 
         if productivity < 60:
+
             recommendations.append(
-                "Tingkatkan manajemen waktu dan fokus kerja."
+                "Gunakan teknik manajemen waktu."
             )
 
         if exercise < 20:
+
             recommendations.append(
-                "Tambahkan aktivitas olahraga harian."
+                "Tambahkan aktivitas olahraga."
             )
 
         if len(recommendations) == 0:
 
             st.success("""
-            Pengguna memiliki pola aktivitas digital yang cukup sehat.
+            Anda memiliki pola aktivitas digital yang cukup sehat.
             """)
 
         else:
 
             for rec in recommendations:
-                st.warning(rec)
+
+                st.info(rec)
+
+        # =================================================
+        # BRAIN RECOVERY SYSTEM
+        # =================================================
+
+        st.markdown("---")
+
+        st.header("🧠 Brain Recovery System")
+
+        brainrot_score = 0
+
+        if screen_time > 8:
+            brainrot_score += 30
+
+        if social_media > 6:
+            brainrot_score += 25
+
+        if sleep_hours < 6:
+            brainrot_score += 25
+
+        if stress_level > 7:
+            brainrot_score += 20
+
+        if brainrot_score < 30:
+
+            brainrot_category = "🟢 Risiko Brainrot Rendah"
+
+            brainrot_desc = """
+            Pola aktivitas digital Anda masih relatif sehat.
+            """
+
+        elif brainrot_score < 60:
+
+            brainrot_category = "🟡 Risiko Brainrot Sedang"
+
+            brainrot_desc = """
+            Anda mulai menunjukkan gejala overstimulasi digital.
+            """
+
+        else:
+
+            brainrot_category = "🔴 Risiko Brainrot Tinggi"
+
+            brainrot_desc = """
+            Anda menunjukkan indikasi brainrot tinggi.
+            """
+
+        st.subheader(brainrot_category)
+
+        st.warning(brainrot_desc)
+
+        st.markdown("""
+        ### 🧘 Rekomendasi Pemulihan Otak
+        """)
+
+        recovery = []
+
+        if screen_time > 8:
+
+            recovery.append(
+                "📵 Lakukan pembatasan digital minimal 1–2 jam tanpa gadget."
+            )
+
+        if social_media > 6:
+
+            recovery.append(
+                "📱 Kurangi konsumsi short-form content."
+            )
+
+        if sleep_hours < 6:
+
+            recovery.append(
+                "😴 Tingkatkan kualitas tidur menjadi 7–8 jam."
+            )
+
+        if stress_level > 7:
+
+            recovery.append(
+                "🧘 Lakukan mindfulness atau relaksasi."
+            )
+
+        if productivity < 60:
+
+            recovery.append(
+                "🎯 Gunakan teknik deep work atau Pomodoro."
+            )
+
+        if exercise < 20:
+
+            recovery.append(
+                "🏃 Lakukan olahraga ringan."
+            )
+
+        if len(recovery) == 0:
+
+            st.success("""
+            Anda memiliki pola digital yang cukup sehat.
+            """)
+
+        else:
+
+            for item in recovery:
+
+                st.success(item)
+
+# =========================================================
+# TAB 4
+# =========================================================
+
+with tab4:
+
+    st.header("📝 Catatan Dashboard")
+
+    st.markdown("""
+    Halaman ini berisi informasi tambahan mengenai
+    kelelahan kognitif, dampak overstimulasi digital,
+    serta proses pemulihan fungsi otak.
+    """)
+
+    st.markdown("---")
+
+    st.markdown("""
+    <div style="
+    background-color:#111827;
+    padding:25px;
+    border-radius:15px;
+    border-left:5px solid #3B82F6;
+    margin-bottom:20px;
+    ">
+
+    <p style="
+    font-size:28px;
+    font-weight:bold;
+    margin-bottom:15px;
+    ">
+
+    📘 Penjelasan Cognitive Fatigue
+
+    </p>
+
+    <p style="
+    font-size:18px;
+    line-height:1.5;
+    margin:0;
+    padding:0;
+    ">
+
+    Cognitive fatigue atau kelelahan kognitif merupakan kondisi
+    penurunan kemampuan mental akibat aktivitas digital berlebihan,
+    kurang tidur, peningkatan stres, serta overload informasi digital.
+
+    <br>
+
+    Kondisi ini dapat menyebabkan:
+
+    <ul style="
+    line-height:1.5;
+    margin-top:10px;
+    ">
+
+    <li>Penurunan fokus dan konsentrasi</li>
+    <li>Produktivitas kerja menurun</li>
+    <li>Kesulitan mengambil keputusan</li>
+    <li>Kelelahan mental (mental exhaustion)</li>
+    <li>Peningkatan risiko burnout</li>
+
+    </ul>
+
+    </p>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+    background-color:#1F2937;
+    padding:25px;
+    border-radius:15px;
+    border-left:5px solid #EF4444;
+    margin-bottom:20px;
+    ">
+
+    <p style="
+    font-size:28px;
+    font-weight:bold;
+    margin-bottom:15px;
+    ">
+
+    ⚠️ Dampak Potensial
+
+    </p>
+
+    <p style="
+    font-size:18px;
+    line-height:1.5;
+    margin:0;
+    padding:0;
+    ">
+
+    Konsumsi konten digital berlebihan dapat menyebabkan:
+
+    <ul style="
+    line-height:1.5;
+    margin-top:10px;
+    ">
+
+    <li>Penurunan fokus dan konsentrasi</li>
+    <li>Overstimulasi dopamin akibat konten instan</li>
+    <li>Mental exhaustion atau kelelahan mental</li>
+    <li>Kesulitan melakukan deep work</li>
+    <li>Motivasi belajar dan produktivitas menurun</li>
+    <li>Gangguan kualitas tidur</li>
+    <li>Peningkatan stres dan kecemasan</li>
+
+    </ul>
+
+    </p>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+    background-color:#111827;
+    padding:25px;
+    border-radius:15px;
+    border-left:5px solid #10B981;
+    ">
+
+    <p style="
+    font-size:28px;
+    font-weight:bold;
+    margin-bottom:15px;
+    ">
+
+    🧠 Neuroplasticity Recovery Insight
+
+    </p>
+
+    <p style="
+    font-size:18px;
+    line-height:1.5;
+    margin:0;
+    padding:0;
+    ">
+
+    Otak manusia memiliki kemampuan neuroplasticity,
+    yaitu kemampuan untuk membentuk ulang jalur saraf
+    berdasarkan kebiasaan baru.
+
+    <br>
+
+    Artinya:
+    brainrot atau kelelahan akibat overstimulasi digital
+    bukan kondisi permanen.
+
+    <br>
+
+    Kebiasaan sehat seperti:
+
+    <ul style="
+    line-height:1.5;
+    margin-top:10px;
+    ">
+
+    <li>Tidur cukup 7–8 jam</li>
+    <li>Mengurangi durasi penggunaan gadget berlebihan</li>
+    <li>Olahraga rutin</li>
+    <li>Membaca buku</li>
+    <li>Melatih deep work dan fokus</li>
+    <li>Mengurangi short-form content</li>
+
+    </ul>
+
+    dapat membantu memulihkan fokus,
+    konsentrasi, dan kesehatan mental secara bertahap.
+
+    </p>
+
+    </div>
+    """, unsafe_allow_html=True)
 
 # =========================================================
 # FOOTER
