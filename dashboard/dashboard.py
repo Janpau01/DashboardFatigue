@@ -158,7 +158,7 @@ st.markdown("---")
 tab1, tab2, tab3, tab4 = st.tabs([
     "📌 Ringkasan",
     "📊 Analisis",
-    "🧠 Deteksi Kelelahan",
+    "🧠 Daily Wellness",
     "📝 Catatan Dashboard"
 ])
 
@@ -465,7 +465,7 @@ with col1:
 
 with tab3:
 
-    st.header("🧠 Deteksi Dini Kelelahan Kognitif")
+    st.header("🧠 Pemeriksaan Wellness Harian")
 
     st.markdown("""
     Masukkan aktivitas harian Anda untuk mendeteksi tingkat kelelahan kognitif.
