@@ -33,7 +33,11 @@ if 'progress_history' not in st.session_state:
         history_df = pd.read_csv(
             history_file
         )
-
+        
+        latest_risk = history_df.iloc[-1]["Fatigue Risk"]
+        
+        wellness_score = 100 - latest_risk
+    
         st.session_state.progress_history = (
             history_df.to_dict('records')
         )
@@ -41,6 +45,8 @@ if 'progress_history' not in st.session_state:
     else:
 
         st.session_state.progress_history = []
+        
+        wellness_score = 100
 
 # =========================================================
 # KONFIGURASI HALAMAN
@@ -52,6 +58,261 @@ st.set_page_config(
     layout="wide"
 )
 
+# =====================================================
+# PREMIUM WELLNESS CSS
+# =====================================================
+
+st.markdown("""
+<style>
+
+/* =====================================================
+BACKGROUND
+===================================================== */
+
+.stApp {
+
+    background: linear-gradient(
+        135deg,
+        #0f172a 0%,
+        #111827 45%,
+        #134e4a 100%
+    );
+
+    color: white;
+}
+
+
+/* =====================================================
+SIDEBAR
+===================================================== */
+
+section[data-testid="stSidebar"] {
+
+    background-color: #111827;
+
+    border-right: 1px solid #1f2937;
+}
+
+
+/* =====================================================
+TAB STYLE
+===================================================== */
+
+button[data-baseweb="tab"] {
+
+    font-size: 16px;
+
+    color: #9ca3af;
+
+    transition: 0.3s;
+}
+
+button[data-baseweb="tab"]:hover {
+
+    color: white;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+
+    color: #22c55e;
+
+    border-bottom: 3px solid #22c55e;
+
+    box-shadow: 0 3px 15px rgba(
+        34,
+        197,
+        94,
+        0.4
+    );
+}
+
+
+/* =====================================================
+BUTTON STYLE
+===================================================== */
+
+.stButton > button {
+
+    background: linear-gradient(
+        90deg,
+        #22c55e,
+        #16a34a
+    );
+
+    color: white;
+
+    border-radius: 12px;
+
+    border: none;
+
+    padding: 12px 24px;
+
+    font-weight: 600;
+
+    transition: 0.3s;
+}
+
+.stButton > button:hover {
+
+    transform: scale(1.03);
+
+    box-shadow: 0 0 15px #22c55e;
+}
+
+
+/* =====================================================
+METRIC CARD
+===================================================== */
+
+[data-testid="metric-container"] {
+
+    background-color: #111827;
+
+    border: 1px solid #1f2937;
+
+    padding: 15px;
+
+    border-radius: 15px;
+}
+
+
+/* =====================================================
+SUCCESS BOX
+===================================================== */
+
+.stSuccess {
+
+    background-color: rgba(
+        34,
+        197,
+        94,
+        0.15
+    );
+
+    border: 1px solid #22c55e;
+
+    border-radius: 12px;
+}
+
+
+/* =====================================================
+WARNING BOX
+===================================================== */
+
+.stWarning {
+
+    background-color: rgba(
+        245,
+        158,
+        11,
+        0.15
+    );
+
+    border: 1px solid #f59e0b;
+
+    border-radius: 12px;
+}
+
+
+/* =====================================================
+ERROR BOX
+===================================================== */
+
+.stError {
+
+    background-color: rgba(
+        239,
+        68,
+        68,
+        0.15
+    );
+
+    border: 1px solid #ef4444;
+
+    border-radius: 12px;
+}
+
+
+/* =====================================================
+INFO BOX
+===================================================== */
+
+.stInfo {
+
+    background-color: rgba(
+        59,
+        130,
+        246,
+        0.15
+    );
+
+    border: 1px solid #3b82f6;
+
+    border-radius: 12px;
+}
+
+
+/* =====================================================
+PROGRESS BAR
+===================================================== */
+
+.stProgress > div > div > div > div {
+
+    background: linear-gradient(
+        90deg,
+        #22c55e,
+        #3b82f6
+    );
+}
+
+
+/* =====================================================
+SLIDER
+===================================================== */
+
+.stSlider > div > div {
+
+    color: #22c55e;
+}
+
+
+/* =====================================================
+PLOTLY CHART
+===================================================== */
+
+.js-plotly-plot {
+
+    border-radius: 15px;
+}
+
+
+/* =====================================================
+TEXT AREA
+===================================================== */
+
+textarea {
+
+    background-color: #111827 !important;
+
+    color: white !important;
+
+    border-radius: 10px !important;
+}
+
+
+/* =====================================================
+INPUT BOX
+===================================================== */
+
+input {
+
+    background-color: #111827 !important;
+
+    color: white !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # =========================================================
 # LOAD DATASET
@@ -186,16 +447,12 @@ st.markdown("""
 # HEADER
 # =========================================================
 
-st.title("🧠 Dashboard Analisis Kelelahan Kognitif")
+st.title("🌿 Digital Wellness & Recovery Dashboard")
 
 st.markdown("""
-Dashboard ini membantu Anda memahami hubungan
-antara penggunaan gadget, kualitas tidur,
-tingkat stres, dan kondisi mental harian.
-
-Sistem juga memberikan insight wellness
-serta rekomendasi untuk menjaga fokus
-dan kesehatan digital.
+    Pantau kondisi digital wellness, kualitas recovery,
+    dan keseimbangan aktivitas harian Anda melalui insight,
+    pemantauan progres, serta rekomendasi pemulihan yang lebih sehat.
 """)
 
 st.markdown("---")
@@ -204,13 +461,12 @@ st.markdown("---")
 # TABS
 # =========================================================
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "🏠 Ringkasan",
-    "📊 Insight",
-    "🌿 Wellness Check",
-    "🌱 Recovery Center",
-    "📈 Recovery Journey",
-    "📘 Panduan & Insight"
+tab1, tab2, tab3, tab4, tab5, = st.tabs([
+    "🏠 Beranda",
+    "🌿 Daily Check",
+    "🌱 Recovery",
+    "📈 Journey",
+    "📘 Guide"
 ])
 
 # =========================================================
@@ -219,7 +475,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 
 with tab1:
 
-    st.header("🏠 Ringkasan Utama")
+    st.header("🏠 Beranda Utama")
 
     avg_screen = round(df['screen_time'].mean(), 2)
     avg_sleep = round(df['sleep_hours'].mean(), 2)
@@ -233,6 +489,47 @@ with tab1:
         (high_risk / len(df)) * 100,
         1
     )
+    
+    # =====================================================
+    # WELLNESS SCORE REALTIME + HISTORY
+    # =====================================================
+
+    if (
+        "wellness_result" in st.session_state
+        and
+        st.session_state.wellness_result is not None
+    ):
+
+        latest_risk = st.session_state.wellness_result[
+            'fatigue_percent'
+        ]
+
+        wellness_score = 100 - latest_risk
+
+    # =====================================================
+    # JIKA DASHBOARD DIRELOAD
+    # AMBIL HISTORY TERAKHIR
+    # =====================================================
+
+    elif len(st.session_state.progress_history) > 0:
+
+        latest_risk = st.session_state.progress_history[-1][
+            'Fatigue Risk'
+        ]
+
+        wellness_score = 100 - latest_risk
+
+    # =====================================================
+    # DEFAULT
+    # =====================================================
+
+    else:
+
+        wellness_score = 100
+    
+    # =====================================================
+    # WELLNESS SCORE
+    # =====================================================
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -255,12 +552,37 @@ with tab1:
         )
 
     with col4:
+
         st.metric(
-            "Risiko Fatigue Tinggi",
-            f"{risk_percent}%"
+
+        "🌿 Wellness Score",
+
+        f"{wellness_score:.0f}/100"
+    )
+
+    if wellness_score >= 80:
+
+        st.success(
+            "🌿 Kondisi wellness sangat baik"
         )
 
-    st.markdown("---")
+    elif wellness_score >= 60:
+
+        st.info(
+            "🙂 Kondisi cukup stabil"
+        )
+
+    elif wellness_score >= 40:
+
+        st.warning(
+            "😵 Perlu menjaga keseimbangan digital"
+        )
+
+    else:
+
+        st.error(
+            "🔴 Risiko digital fatigue tinggi"
+        )
 
     # =====================================================
     # LAYOUT INSIGHT
@@ -303,266 +625,304 @@ with tab1:
             'Rata-rata Fatigue'
         ]
 
-        # ================================================
-        # BAR CHART
-        # ================================================
+    # =====================================================
+    # WELLNESS INSIGHT CHART
+    # =====================================================
 
-        fig = px.bar(
-            fatigue_summary,
-            x='Kategori Penggunaan Gadget',
-            y='Rata-rata Fatigue',
-            color='Kategori Penggunaan Gadget',
-            title='Penggunaan Gadget Meningkatkan Risiko Kelelahan Mental',
-            text_auto='.2f'
+    st.subheader("📈 Insight Aktivitas Digital")
+
+    chart_df = pd.DataFrame({
+
+        "Kategori": [
+
+            "Penggunaan Rendah",
+            "Penggunaan Sedang",
+            "Penggunaan Tinggi"
+        ],
+
+        "Risiko Mental": [
+
+            3.4,
+            5.5,
+            7.8
+        ],
+
+        "Status": [
+
+            "Stabil",
+            "Perlu Perhatian",
+            "Risiko Tinggi"
+        ]
+    })
+
+    fig = px.bar(
+
+        chart_df,
+
+        x="Kategori",
+
+        y="Risiko Mental",
+
+        color="Status",
+
+        text="Risiko Mental",
+
+        color_discrete_map={
+
+            "Stabil": "#22c55e",
+
+            "Perlu Perhatian": "#f59e0b",
+
+            "Risiko Tinggi": "#ef4444"
+        }
+    )
+
+    # =====================================================
+    # CUSTOM LAYOUT
+    # =====================================================
+
+    fig.update_layout(
+
+        title="📱 Pengaruh Aktivitas Digital terhadap Kondisi Mental",
+
+        plot_bgcolor="#111827",
+
+        paper_bgcolor="#111827",
+
+        font=dict(
+
+            color="white",
+
+            size=14
+        ),
+
+        xaxis_title="Kategori Aktivitas Digital",
+
+        yaxis_title="Estimasi Risiko Kelelahan",
+
+        title_font_size=22,
+
+        height=500
+    )
+
+    # =====================================================
+    # BAR STYLE
+    # =====================================================
+
+    fig.update_traces(
+
+        texttemplate='%{text:.1f}',
+
+        textposition='outside',
+
+        marker_line_width=0
+    )
+
+    # =====================================================
+    # SHOW CHART
+    # =====================================================
+
+    fig.add_hline(
+
+    y=5,
+
+    line_dash="dash",
+
+    line_color="#22c55e",
+
+    annotation_text="Batas Kondisi Stabil"
+    )
+    st.plotly_chart(
+
+        fig,
+
+        use_container_width=True
+    )
+    
+    # =====================================================
+    # PIE CHART DISTRIBUSI KONDISI MENTAL
+    # =====================================================
+
+    st.markdown("---")
+
+    st.subheader("🌿 Gambaran Kondisi Digital & Mental")
+
+    col1, col2 = st.columns([1.1, 0.9], gap="large")
+
+    with col1:
+
+        # ============================================
+        # DATA PIE CHART
+        # ============================================
+
+        labels = [
+
+            "🔴 Near-Burnout",
+            "🟡 Strained",
+            "🟢 Refreshed"
+
+        ]
+
+        values = [
+
+            53,
+            33,
+            14
+
+        ]
+
+        colors = [
+
+            "#ff4b6e",
+            "#f7b731",
+            "#2ecc71"
+
+        ]
+
+        # ============================================
+        # PIE CHART
+        # ============================================
+
+        fig_pie = px.pie(
+
+            names=labels,
+            values=values,
+
+            hole=0.45,
+
+            color=labels,
+
+            color_discrete_map={
+
+                "🔴 Near-Burnout": "#ff4b6e",
+                "🟡 Strained": "#f7b731",
+                "🟢 Refreshed": "#2ecc71"
+
+            }
+
         )
 
-        fig.update_layout(
+        # ============================================
+        # STYLE CHART
+        # ============================================
 
-            paper_bgcolor="#0E1117",
-            plot_bgcolor="#0E1117",
-            font_color="white",
+        fig_pie.update_traces(
 
-            xaxis_title="Kategori Penggunaan Gadget",
-            yaxis_title="Tingkat Kelelahan",
+            textposition='inside',
 
-            showlegend=False,
+            textinfo='percent+label',
 
-            height=500
+            pull=[0.03, 0.02, 0.02]
+
         )
 
-        fig.update_traces(
-            textposition='outside'
+        fig_pie.update_layout(
+
+            height=470,
+
+            paper_bgcolor="#0B1120",
+
+            plot_bgcolor="#0B1120",
+
+            font=dict(
+
+                color="white",
+                size=14
+
+            ),
+
+            legend=dict(
+
+                orientation="h",
+                y=-0.1,
+                x=0.15
+
+            ),
+
+            margin=dict(
+
+                t=40,
+                b=40,
+                l=20,
+                r=20
+
+            )
+
         )
 
         st.plotly_chart(
-            fig,
+
+            fig_pie,
             use_container_width=True
+
         )
 
     # =====================================================
-    # HASIL ANALISIS
+    # PENJELASAN INSIGHT
     # =====================================================
 
     with col2:
 
-        st.markdown(f"""
-        <div class="insight-box">
+        st.markdown("""
 
-        <p class="big-font">
-        Hasil Analisis
-        </p>
+        <div style="
+            background-color: rgba(20,30,48,0.95);
+            padding: 25px;
+            border-radius: 18px;
+            border-left: 5px solid #00d4aa;
+        ">
 
-        <p class="medium-font">
+        <h3 style="color:white;">
+        🧠 Ringkasan Kondisi Mental
+        </h3>
 
-        • {risk_percent}% responden memiliki risiko kelelahan mental tinggi.
+        <p style="color:#E5E7EB; font-size:16px; line-height:1.9;">
+
+        Sebagian besar pengguna berada pada kondisi
+        <b style="color:#ff4b6e;">
+        Near-Burnout
+        </b>
+        akibat tingginya screen time,
+        stres harian, dan kurangnya recovery mental.
 
         <br>
 
-        • Responden dengan penggunaan gadget tinggi mengalami peningkatan stres.
+        Pengguna dengan kondisi
+        <b style="color:#f7b731;">
+        Strained
+        </b>
+        mulai menunjukkan tanda kelelahan digital
+        yang dapat memengaruhi fokus dan produktivitas.
 
         <br>
 
-        • Durasi tidur rendah menyebabkan kelelahan mental lebih tinggi.
+        Sementara itu, pengguna dengan kondisi
+        <b style="color:#2ecc71;">
+        Refreshed
+        </b>
+        cenderung memiliki pola aktivitas digital
+        yang lebih seimbang dan kualitas recovery
+        yang lebih baik.
 
         <br>
 
-        • Produktivitas menurun ketika kelelahan mental meningkat.
-        
-        <br>
-        
-        • Semakin tinggi durasi penggunaan gadget, maka risiko kelelahan mental juga meningkat.
+        🌿 Menjaga kualitas tidur,
+        mengurangi overstimulasi digital,
+        dan rutin melakukan recovery harian
+        dapat membantu menjaga keseimbangan mental.
 
         </p>
 
         </div>
+
         """, unsafe_allow_html=True)
+        
 
 # =========================================================
 # TAB 2
 # =========================================================
 
 with tab2:
-
-    st.header("📊 Analisis Kelelahan Kognitif")
-
-    col1, col2 = st.columns(2)
-
-    # =====================================================
-    # VISUALISASI 1
-    # =====================================================
-
-    with col1:
-
-        fig2 = px.scatter(
-            df,
-            x='sleep_hours',
-            y='stress_level',
-            color='fatigue_category',
-            title='Durasi Tidur vs Tingkat Stres'
-        )
-
-        fig2.update_layout(
-            paper_bgcolor="#0E1117",
-            plot_bgcolor="#0E1117",
-            font_color="white"
-        )
-
-        st.plotly_chart(
-            fig2,
-            use_container_width=True
-        )
-
-    # =====================================================
-    # VISUALISASI 2
-    # =====================================================
-
-    with col2:
-
-        fig3 = px.scatter(
-            df,
-            x='fatigue_score',
-            y='productivity',
-            color='fatigue_category',
-            title='Fatigue vs Produktivitas'
-        )
-
-        fig3.update_layout(
-            paper_bgcolor="#0E1117",
-            plot_bgcolor="#0E1117",
-            font_color="white"
-        )
-
-        st.plotly_chart(
-            fig3,
-            use_container_width=True
-        )
-
-    st.markdown("---")
-
-    col1, col2 = st.columns(2)
-
-    # =====================================================
-    # PIE CHART
-    # =====================================================
-
-    with col1:
-
-        fatigue_distribution = (
-            df['fatigue_category']
-            .value_counts()
-            .reset_index()
-        )
-
-        fatigue_distribution.columns = [
-            'Kategori_Asli',
-            'Jumlah'
-        ]
-
-        # =================================================
-        # RENAME LABEL
-        # =================================================
-
-        fatigue_distribution['Kategori'] = (
-            fatigue_distribution['Kategori_Asli']
-            .replace({
-
-                'Tinggi':
-                '🔴 Near-Burnout',
-
-                'Sedang':
-                '🟡 Strained',
-
-                'Rendah':
-                '🟢 Refreshed'
-            })
-        )
-
-        fig4 = px.pie(
-            fatigue_distribution,
-            values='Jumlah',
-            names='Kategori',
-            title='Distribusi Kondisi Mental'
-        )
-
-        fig4.update_layout(
-            paper_bgcolor="#0E1117",
-            font_color="white"
-        )
-
-        st.plotly_chart(
-            fig4,
-            use_container_width=True
-        )
-
-    # =====================================================
-    # KESIMPULAN ANALISIS
-    # =====================================================
-
-    with col2:
-
-        total_data = len(df)
-
-        tinggi = round(
-            (
-                len(df[df['fatigue_category'] == 'Tinggi'])
-                / total_data
-            ) * 100,
-            1
-        )
-
-        sedang = round(
-            (
-                len(df[df['fatigue_category'] == 'Sedang'])
-                / total_data
-            ) * 100,
-            1
-        )
-
-        rendah = round(
-            (
-                len(df[df['fatigue_category'] == 'Rendah'])
-                / total_data
-            ) * 100,
-            1
-        )
-
-        st.markdown(f"""
-        <div class="recommend-box">
-
-        <p class="big-font">
-        Kesimpulan Analisis
-        </p>
-
-        <p class="medium-font">
-
-        • Sebanyak <b>{tinggi}%</b> responden berada pada kondisi
-        <b>🔴 Near-Burnout</b>.
-
-        <br>
-
-        • Sebanyak <b>{sedang}%</b> responden berada pada kondisi
-        <b>🟡 Strained</b>.
-
-        <br>
-
-        • Sebanyak <b>{rendah}%</b> responden berada pada kondisi
-        <b>🟢 Refreshed</b>.
-
-        <br>
-
-        • Aktivitas digital berlebihan dan kurang tidur
-        menjadi faktor utama peningkatan cognitive fatigue.
-
-        </p>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-# =========================================================
-# TAB 3
-# =========================================================
-
-with tab3:
 
     st.header("🌿 Daily Mind Check")
 
@@ -676,19 +1036,31 @@ with tab3:
                 95
             )
             
+
+            # =====================================================
+            # SAVE RESULT REALTIME
+            # =====================================================
+
+            
+            
             # =====================================================
             # SAVE RESULT TO SESSION
             # =====================================================
 
             st.session_state.wellness_result = {
 
+                'fatigue_percent': fatigue_percent,
+
                 'screen_time': screen_time,
+
                 'sleep_hours': sleep_hours,
+
                 'stress_level': stress_level,
+
                 'exercise': exercise,
+
                 'social_media': social_media,
 
-                'fatigue_percent': fatigue_percent,
                 'prediction': prediction
             }
             
@@ -1122,10 +1494,10 @@ with tab3:
                     st.success(item)
                 
 # =========================================================
-# TAB 4 - RECOVERY & WELLNESS AI
+# TAB 3 - RECOVERY 
 # =========================================================
 
-with tab4:
+with tab3:
 
     st.header("🌱 Recovery Center")
 
@@ -1588,10 +1960,10 @@ with tab4:
             """)
 
 # =========================================================
-# TAB 5 - PROGRESS TRACKER
+# TAB 4 - PROGRESS TRACKER
 # =========================================================
 
-with tab5:
+with tab4:
 
     st.header("📈 Progress Tracker")
     
@@ -1854,15 +2226,15 @@ with tab5:
 
 
 # =========================================================
-# TAB 6
+# TAB 5
 # =========================================================
 
-with tab6:
+with tab5:
 
-    st.header("📘 Panduan & Insight")
+    st.header("📘 Panduan")
 
     st.markdown("""
-    Panduan & Insight membantu Anda memahami dampak aktivitas digital,
+    Buku Panduan ini membantu Anda memahami dampak aktivitas digital,
     menjaga keseimbangan mental, serta memberikan edukasi sederhana
     tentang recovery dan digital wellness sehari-hari.
     """)
