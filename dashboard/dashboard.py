@@ -1,7 +1,46 @@
 import streamlit as st
 import pandas as pd
+import os
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
+import joblib
+
+from datetime import datetime
+
+# =====================================================
+# FILE HISTORY
+# =====================================================
+
+history_file = "progress_history.csv"
+
+# =====================================================
+# SESSION STATE
+# =====================================================
+
+if 'wellness_result' not in st.session_state:
+
+    st.session_state.wellness_result = None
+
+# =====================================================
+# LOAD HISTORY
+# =====================================================
+
+if 'progress_history' not in st.session_state:
+
+    if os.path.exists(history_file):
+
+        history_df = pd.read_csv(
+            history_file
+        )
+
+        st.session_state.progress_history = (
+            history_df.to_dict('records')
+        )
+
+    else:
+
+        st.session_state.progress_history = []
 
 # =========================================================
 # KONFIGURASI HALAMAN
@@ -13,13 +52,14 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # =========================================================
 # LOAD DATASET
 # =========================================================
 
 @st.cache_data
 def load_data():
-
+    
     df = pd.read_csv(
         "data/screen_time_mentalwellness.csv"
     )
@@ -96,6 +136,14 @@ def load_data():
 
 df = load_data()
 
+# =====================================================
+# LOAD MODEL MACHINE LEARNING
+# =====================================================
+
+model = joblib.load(
+    "model/fatigue_model.pkl"
+)
+
 # =========================================================
 # CUSTOM CSS
 # =========================================================
@@ -141,12 +189,13 @@ st.markdown("""
 st.title("🧠 Dashboard Analisis Kelelahan Kognitif")
 
 st.markdown("""
-Dashboard ini digunakan untuk menganalisis hubungan aktivitas digital harian terhadap:
+Dashboard ini membantu Anda memahami hubungan
+antara penggunaan gadget, kualitas tidur,
+tingkat stres, dan kondisi mental harian.
 
-- tingkat stres,
-- kualitas tidur,
-- produktivitas,
-- dan risiko kelelahan kognitif.
+Sistem juga memberikan insight wellness
+serta rekomendasi untuk menjaga fokus
+dan kesehatan digital.
 """)
 
 st.markdown("---")
@@ -155,11 +204,13 @@ st.markdown("---")
 # TABS
 # =========================================================
 
-tab1, tab2, tab3, tab4 = st.tabs([
-    "📌 Ringkasan",
-    "📊 Analisis",
-    "🧠 Daily Wellness",
-    "📝 Catatan Dashboard"
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "🏠 Ringkasan",
+    "📊 Insight",
+    "🌿 Wellness Check",
+    "🌱 Recovery Center",
+    "📈 Recovery Journey",
+    "📘 Panduan & Insight"
 ])
 
 # =========================================================
@@ -168,7 +219,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 
 with tab1:
 
-    st.header("📌 Ringkasan Utama")
+    st.header("🏠 Ringkasan Utama")
 
     avg_screen = round(df['screen_time'].mean(), 2)
     avg_sleep = round(df['sleep_hours'].mean(), 2)
@@ -211,29 +262,76 @@ with tab1:
 
     st.markdown("---")
 
-    st.subheader("🔍 Insight Utama")
+    # =====================================================
+    # LAYOUT INSIGHT
+    # =====================================================
 
-    col1, col2 = st.columns([1.5, 1])
+    col1, col2 = st.columns([2, 1])
 
     # =====================================================
-    # CHART
+    # CHART ANALISIS
     # =====================================================
 
     with col1:
 
-        fig = px.scatter(
-            df,
-            x='screen_time',
-            y='fatigue_score',
-            color='stress_level',
-            title='Hubungan Penggunaan Gadget dan Kelelahan Kognitif',
-            opacity=0.6
+        # ================================================
+        # KATEGORI PENGGUNAAN GADGET
+        # ================================================
+
+        df['kategori_gadget'] = pd.cut(
+            df['screen_time'],
+            bins=[0, 5, 8, 24],
+            labels=[
+                'Rendah',
+                'Sedang',
+                'Tinggi'
+            ]
+        )
+
+        # ================================================
+        # RATA-RATA FATIGUE
+        # ================================================
+
+        fatigue_summary = (
+            df.groupby('kategori_gadget')['fatigue_score']
+            .mean()
+            .reset_index()
+        )
+
+        fatigue_summary.columns = [
+            'Kategori Penggunaan Gadget',
+            'Rata-rata Fatigue'
+        ]
+
+        # ================================================
+        # BAR CHART
+        # ================================================
+
+        fig = px.bar(
+            fatigue_summary,
+            x='Kategori Penggunaan Gadget',
+            y='Rata-rata Fatigue',
+            color='Kategori Penggunaan Gadget',
+            title='Penggunaan Gadget Meningkatkan Risiko Kelelahan Mental',
+            text_auto='.2f'
         )
 
         fig.update_layout(
+
             paper_bgcolor="#0E1117",
             plot_bgcolor="#0E1117",
-            font_color="white"
+            font_color="white",
+
+            xaxis_title="Kategori Penggunaan Gadget",
+            yaxis_title="Tingkat Kelelahan",
+
+            showlegend=False,
+
+            height=500
+        )
+
+        fig.update_traces(
+            textposition='outside'
         )
 
         st.plotly_chart(
@@ -242,7 +340,7 @@ with tab1:
         )
 
     # =====================================================
-    # INSIGHT
+    # HASIL ANALISIS
     # =====================================================
 
     with col2:
@@ -256,7 +354,7 @@ with tab1:
 
         <p class="medium-font">
 
-        • {risk_percent}% responden memiliki risiko fatigue tinggi.
+        • {risk_percent}% responden memiliki risiko kelelahan mental tinggi.
 
         <br>
 
@@ -264,11 +362,15 @@ with tab1:
 
         <br>
 
-        • Durasi tidur rendah menyebabkan fatigue lebih tinggi.
+        • Durasi tidur rendah menyebabkan kelelahan mental lebih tinggi.
 
         <br>
 
-        • Produktivitas menurun ketika fatigue meningkat.
+        • Produktivitas menurun ketika kelelahan mental meningkat.
+        
+        <br>
+        
+        • Semakin tinggi durasi penggunaan gadget, maka risiko kelelahan mental juga meningkat.
 
         </p>
 
@@ -339,58 +441,58 @@ with tab2:
 
     col1, col2 = st.columns(2)
 
-# =====================================================
-# PIE CHART
-# =====================================================
+    # =====================================================
+    # PIE CHART
+    # =====================================================
 
-with col1:
+    with col1:
 
-    fatigue_distribution = (
-        df['fatigue_category']
-        .value_counts()
-        .reset_index()
-    )
+        fatigue_distribution = (
+            df['fatigue_category']
+            .value_counts()
+            .reset_index()
+        )
 
-    fatigue_distribution.columns = [
-        'Kategori_Asli',
-        'Jumlah'
-    ]
+        fatigue_distribution.columns = [
+            'Kategori_Asli',
+            'Jumlah'
+        ]
 
-    # =================================================
-    # RENAME LABEL
-    # =================================================
+        # =================================================
+        # RENAME LABEL
+        # =================================================
 
-    fatigue_distribution['Kategori'] = (
-        fatigue_distribution['Kategori_Asli']
-        .replace({
+        fatigue_distribution['Kategori'] = (
+            fatigue_distribution['Kategori_Asli']
+            .replace({
 
-            'Tinggi':
-            '🔴 Near-Burnout',
+                'Tinggi':
+                '🔴 Near-Burnout',
 
-            'Sedang':
-            '🟡 Strained',
+                'Sedang':
+                '🟡 Strained',
 
-            'Rendah':
-            '🟢 Refreshed'
-        })
-    )
+                'Rendah':
+                '🟢 Refreshed'
+            })
+        )
 
-    fig4 = px.pie(
-        fatigue_distribution,
-        values='Jumlah',
-        names='Kategori',
-        title='Distribusi Kondisi Mental'
-    )
+        fig4 = px.pie(
+            fatigue_distribution,
+            values='Jumlah',
+            names='Kategori',
+            title='Distribusi Kondisi Mental'
+        )
 
-    fig4.update_layout(
-        paper_bgcolor="#0E1117",
-        font_color="white"
-    )
+        fig4.update_layout(
+            paper_bgcolor="#0E1117",
+            font_color="white"
+        )
 
-    st.plotly_chart(
-        fig4,
-        use_container_width=True
-    )
+        st.plotly_chart(
+            fig4,
+            use_container_width=True
+        )
 
     # =====================================================
     # KESIMPULAN ANALISIS
@@ -434,22 +536,19 @@ with col1:
         <p class="medium-font">
 
         • Sebanyak <b>{tinggi}%</b> responden berada pada kondisi
-        <b>🔴 Near-Burnout</b>, yang menunjukkan tingkat
-        kelelahan mental tinggi akibat aktivitas digital berlebihan.
+        <b>🔴 Near-Burnout</b>.
 
-        <br><br>
+        <br>
 
         • Sebanyak <b>{sedang}%</b> responden berada pada kondisi
-        <b>🟡 Strained</b>, yang menunjukkan mulai munculnya
-        tekanan mental dan penurunan fokus.
+        <b>🟡 Strained</b>.
 
-        <br><br>
+        <br>
 
         • Sebanyak <b>{rendah}%</b> responden berada pada kondisi
-        <b>🟢 Refreshed</b>, yang menunjukkan kondisi mental
-        relatif stabil dan sehat.
+        <b>🟢 Refreshed</b>.
 
-        <br><br>
+        <br>
 
         • Aktivitas digital berlebihan dan kurang tidur
         menjadi faktor utama peningkatan cognitive fatigue.
@@ -465,10 +564,11 @@ with col1:
 
 with tab3:
 
-    st.header("🧠 Pemeriksaan Wellness Harian")
+    st.header("🌿 Daily Mind Check")
 
     st.markdown("""
-    Masukkan aktivitas harian Anda untuk mendeteksi tingkat kelelahan kognitif.
+    Masukkan aktivitas harian Anda untuk melihat kondisi
+    keseimbangan mental dan penggunaan digital sehari-hari.
     """)
 
     with st.form("fatigue_form"):
@@ -531,239 +631,1240 @@ with tab3:
 
     if submitted:
 
-        fatigue_score = (
-            (screen_time * 0.35) +
-            ((10 - sleep_hours) * 0.30) +
-            (stress_level * 0.35)
-        )
+        with st.spinner(
+            "🤖 Sistem sedang menganalisis kondisi mental Anda..."
+        ):
 
-        fatigue_percent = min(
-            int(fatigue_score * 10),
-            100
-        )
+        # =====================================================
+        # INPUT DATA MACHINE LEARNING
+        # =====================================================
 
-        st.subheader("📊 Hasil Deteksi")
+            input_data = pd.DataFrame([{
 
-        st.progress(fatigue_percent)
+                'screen_time': screen_time,
+                'sleep_hours': sleep_hours,
+                'stress_level': stress_level,
+                'digital_balance': 50,
+                'physical_activity': exercise,
+                'work_hours': 8
+            }])
 
-        st.metric(
-            "Persentase Kelelahan Kognitif",
-            f"{fatigue_percent}%"
-        )
+            # =================================================
+            # PREDIKSI MACHINE LEARNING
+            # =================================================
 
-        # =================================================
-        # STATUS FATIGUE
-        # =================================================
+            prediction = model.predict(
+                input_data
+            )[0]
 
-        if fatigue_percent < 40:
+            # =================================================
+            # SKOR RISIKO KELELAHAN MENTAL
+            # =================================================
 
-            category = "🟢 Refreshed"
-
-            explanation = """
-            Kondisi mental Anda masih stabil,
-            fokus masih terjaga,
-            dan aktivitas digital belum memberikan
-            tekanan kognitif berlebihan.
-            """
-
-        elif fatigue_percent < 70:
-
-            category = "🟡 Strained"
-
-            explanation = """
-            Anda mulai mengalami tekanan mental
-            dan kelelahan kognitif ringan akibat
-            aktivitas digital dan stres harian.
-            """
-
-        else:
-
-            category = "🔴 Near-Burnout"
-
-            explanation = """
-            Kondisi mental Anda menunjukkan tanda-tanda
-            kelelahan tinggi dan mendekati burnout.
-
-            Disarankan untuk segera melakukan
-            recovery dan mengurangi overstimulasi digital.
-            """
-
-        st.markdown(f"## {category}")
-
-        st.warning(explanation)
-
-        # =================================================
-        # REKOMENDASI CERDAS
-        # =================================================
-
-        st.header("💡 Rekomendasi Cerdas")
-
-        recommendations = []
-
-        if screen_time > 8:
-
-            recommendations.append(
-                "Kurangi penggunaan gadget harian."
+            risk_score = (
+                (screen_time * 0.35) +
+                ((10 - sleep_hours) * 0.30) +
+                (stress_level * 0.35)
             )
 
-        if sleep_hours < 6:
+            # =================================================
+            # NORMALISASI PERSENTASE RISIKO
+            # =================================================
 
-            recommendations.append(
-                "Tingkatkan kualitas tidur menjadi 7–8 jam."
+            fatigue_percent = min(
+                int(risk_score * 8.5),
+                95
+            )
+            
+            # =====================================================
+            # SAVE RESULT TO SESSION
+            # =====================================================
+
+            st.session_state.wellness_result = {
+
+                'screen_time': screen_time,
+                'sleep_hours': sleep_hours,
+                'stress_level': stress_level,
+                'exercise': exercise,
+                'social_media': social_media,
+
+                'fatigue_percent': fatigue_percent,
+                'prediction': prediction
+            }
+            
+            # =====================================================
+            # SAVE HISTORY
+            # =====================================================
+
+            new_data = {
+
+                'Date': datetime.now().strftime(
+                "%d-%m-%Y %H:%M"
+                ),
+                
+                'Fatigue Risk': fatigue_percent,
+                'Screen Time': screen_time,
+                'Stress': stress_level,
+                'Sleep': sleep_hours,
+                'Exercise': exercise
+            }
+
+            if len(st.session_state.progress_history) == 0 or \
+            st.session_state.progress_history[-1] != new_data:
+
+                st.session_state.progress_history.append(
+                    new_data
             )
 
-        if stress_level > 7:
+            # =====================================================
+            # SAVE TO CSV
+            # =====================================================
 
-            recommendations.append(
-                "Lakukan manajemen stres dan relaksasi."
+            history_df = pd.DataFrame(
+                st.session_state.progress_history
             )
 
-        if social_media > 6:
+            history_df.to_csv(
+                history_file,
+                index=False
+            )
+            
+            # =================================================
+            # INTERPRETASI RISIKO
+            # =================================================
 
-            recommendations.append(
-                "Batasi penggunaan media sosial."
+            if fatigue_percent <= 35:
+
+                risk_label = "🟢 Stabil"
+
+                risk_desc = """
+                Kondisi mental Anda masih stabil
+                dan aktivitas digital masih dalam batas aman.
+                """
+
+            elif fatigue_percent <= 65:
+
+                risk_label = "🟡 Mulai Lelah"
+
+                risk_desc = """
+                Aktivitas digital dan stres harian mulai memberikan dampak pada fokus dan energi mental Anda.
+                """
+
+            elif fatigue_percent <= 85:
+
+                risk_label = "🟠 Risiko Tinggi"
+
+                risk_desc = """
+                Tingkat kelelahan mental Anda cukup tinggi dan mulai mempengaruhi kualitas aktivitas harian.
+                """
+
+            else:
+
+                risk_label = "🔴 Near-Burnout"
+
+                risk_desc = """
+                Risiko kelelahan mental Anda sangat tinggi dan mendekati kondisi burnout.
+                """
+
+            # =================================================
+            # HASIL DETEKSI
+            # =================================================
+
+            st.subheader("🌿 Kondisi Digital Wellness Anda")
+            
+            st.success(
+            "✨ Sistem berhasil menganalisis kondisi digital wellness Anda"
+    )
+
+            st.progress(fatigue_percent)
+
+            st.metric(
+                "Tingkat Risiko Kelelahan Mental",
+                f"{fatigue_percent}%"
+            )
+            
+            st.info(f"""
+            {risk_label}
+
+            {risk_desc}
+            """)
+            # =================================================
+            # GAUGE CHART AI
+            # =================================================
+
+            gauge = go.Figure(go.Indicator(
+
+                mode="gauge+number",
+
+                value=fatigue_percent,
+
+                title={
+                    'text':
+                    "Estimasi Kondisi Mental"
+                },
+
+                gauge={
+
+                    'axis': {
+                        'range': [0, 100]
+                    },
+
+                    'bar': {
+                        'color': "#00CC96"
+                    },
+
+                    'steps': [
+
+                        {
+                            'range': [0, 40],
+                            'color': "#10B981"
+                        },
+
+                        {
+                            'range': [40, 70],
+                            'color': "#F59E0B"
+                        },
+
+                        {
+                            'range': [70, 100],
+                            'color': "#EF4444"
+                        }
+                    ]
+                }
+            ))
+
+            gauge.update_layout(
+
+                paper_bgcolor="#0E1117",
+
+                font={
+                    'color': "white"
+                },
+
+                height=300
             )
 
-        if productivity < 60:
-
-            recommendations.append(
-                "Gunakan teknik manajemen waktu."
+            st.plotly_chart(
+                gauge,
+                use_container_width=True
             )
+            
+            # =================================================
+            # HASIL PREDIKSI MACHINE LEARNING
+            # =================================================
 
-        if exercise < 20:
+            if prediction == "Refreshed":
 
-            recommendations.append(
-                "Tambahkan aktivitas olahraga."
-            )
+                category = "🟢 Refreshed"
 
-        if len(recommendations) == 0:
+                explanation = """
+                Kondisi mental Anda masih stabil, fokus masih terjaga,
+                dan aktivitas digital belum memberikan tekanan kognitif berlebihan.
+                """
 
-            st.success("""
-            Anda memiliki pola aktivitas digital yang cukup sehat.
+            elif prediction == "Strained":
+
+                category = "🟡 Strained"
+
+                explanation = """
+                Anda mulai mengalami tekanan mental
+                dan kelelahan mental ringan akibat
+                aktivitas digital dan stres harian.
+                """
+
+            else:
+
+                category = "🔴 Near-Burnout"
+
+                explanation = """
+                Kondisi mental Anda menunjukkan tanda-tanda
+                kelelahan tinggi dan mendekati burnout.
+                Disarankan untuk segera melakukan
+                recovery dan mengurangi overstimulasi digital.
+                """
+
+            st.markdown(f"## {category}")
+
+            st.warning(explanation)
+
+            st.info(f"""
+            📊 Semakin tinggi persentase,
+            maka semakin tinggi risiko kelelahan mental
+            akibat aktivitas digital dan stres harian.
+
+            Tingkat risiko Anda saat ini:
+            {fatigue_percent}%
             """)
 
-        else:
+            # =================================================
+            # REKOMENDASI CERDAS
+            # =================================================
 
-            for rec in recommendations:
+            st.header("💡 Rekomendasi Aktivitas Recovery")
 
-                st.info(rec)
+            recommendations = []
 
-        # =================================================
-        # BRAIN RECOVERY SYSTEM
-        # =================================================
+            # =================================================
+            # SCREEN TIME TINGGI
+            # =================================================
 
-        st.markdown("---")
+            if screen_time > 8:
 
-        st.header("🧠 Brain Recovery System")
+                recommendations.extend([
 
-        brainrot_score = 0
+                    "📚 Membaca buku fisik selama 20–30 menit.",
 
-        if screen_time > 8:
-            brainrot_score += 30
+                    "🚶 Jalan santai sore tanpa membawa gadget.",
 
-        if social_media > 6:
-            brainrot_score += 25
+                    "🌳 Duduk santai di area terbuka untuk mengurangi overstimulasi digital.",
 
-        if sleep_hours < 6:
-            brainrot_score += 25
+                    "☕ Luangkan waktu istirahat tanpa membuka media sosial."
+                ])
 
-        if stress_level > 7:
-            brainrot_score += 20
+            # =================================================
+            # STRES TINGGI
+            # =================================================
 
-        if brainrot_score < 30:
+            if stress_level > 7:
 
-            brainrot_category = "🟢 Risiko Brainrot Rendah"
+                recommendations.extend([
 
-            brainrot_desc = """
-            Pola aktivitas digital Anda masih relatif sehat.
-            """
+                    "🧘 Melakukan meditasi atau latihan pernapasan mindfulness.",
 
-        elif brainrot_score < 60:
+                    "🎵 Mendengarkan musik relaksasi tanpa scrolling media sosial.",
 
-            brainrot_category = "🟡 Risiko Brainrot Sedang"
+                    "🌿 Luangkan waktu untuk relaksasi dan menenangkan pikiran.",
 
-            brainrot_desc = """
-            Anda mulai menunjukkan gejala overstimulasi digital.
-            """
+                    "✍️ Menulis jurnal harian untuk mengurangi tekanan mental."
+                ])
 
-        else:
+            # =================================================
+            # DURASI TIDUR RENDAH
+            # =================================================
 
-            brainrot_category = "🔴 Risiko Brainrot Tinggi"
+            if sleep_hours < 6:
 
-            brainrot_desc = """
-            Anda menunjukkan indikasi brainrot tinggi.
-            """
+                recommendations.extend([
 
-        st.subheader(brainrot_category)
+                    "😴 Tidur lebih awal dan hindari gadget sebelum tidur.",
 
-        st.warning(brainrot_desc)
+                    "📖 Membaca buku sebelum tidur untuk membantu relaksasi.",
 
-        st.markdown("""
-        ### 🧘 Rekomendasi Pemulihan Otak
-        """)
+                    "🛌 Ciptakan suasana kamar yang nyaman dan minim distraksi.",
 
-        recovery = []
+                    "🌙 Kurangi konsumsi konten digital pada malam hari."
+                ])
 
-        if screen_time > 8:
+            # =================================================
+            # AKTIVITAS FISIK RENDAH
+            # =================================================
 
-            recovery.append(
-                "📵 Lakukan pembatasan digital minimal 1–2 jam tanpa gadget."
-            )
+            if exercise < 20:
 
-        if social_media > 6:
+                recommendations.extend([
 
-            recovery.append(
-                "📱 Kurangi konsumsi short-form content."
-            )
+                    "🏃 Jogging ringan selama 15–20 menit.",
 
-        if sleep_hours < 6:
+                    "🚴 Bersepeda santai di pagi atau sore hari.",
 
-            recovery.append(
-                "😴 Tingkatkan kualitas tidur menjadi 7–8 jam."
-            )
+                    "🤸 Stretching atau olahraga ringan di rumah.",
 
-        if stress_level > 7:
+                    "🚶 Tingkatkan aktivitas berjalan kaki harian."
+                ])
 
-            recovery.append(
-                "🧘 Lakukan mindfulness atau relaksasi."
-            )
+            # =================================================
+            # PRODUKTIVITAS MENURUN
+            # =================================================
 
-        if productivity < 60:
+            if productivity < 60:
 
-            recovery.append(
-                "🎯 Gunakan teknik deep work atau Pomodoro."
-            )
+                recommendations.extend([
 
-        if exercise < 20:
+                    "📝 Membuat jadwal aktivitas harian secara teratur.",
 
-            recovery.append(
-                "🏃 Lakukan olahraga ringan."
-            )
+                    "🎯 Gunakan teknik fokus seperti Pomodoro.",
 
-        if len(recovery) == 0:
+                    "📵 Kurangi distraksi digital saat bekerja atau belajar.",
 
-            st.success("""
-            Anda memiliki pola digital yang cukup sehat.
+                    "☀️ Sisihkan waktu istirahat singkat agar otak tidak kelelahan."
+                ])
+
+            # =================================================
+            # KONDISI MASIH STABIL
+            # =================================================
+
+            if len(recommendations) == 0:
+
+                st.success("""
+                🌿 Kondisi digital wellness Anda masih cukup baik.
+
+                Pertahankan keseimbangan antara aktivitas digital,
+                aktivitas fisik, dan waktu istirahat agar kesehatan
+                mental tetap terjaga.
+                """)
+
+            # =================================================
+            # TAMPILKAN REKOMENDASI
+            # =================================================
+
+            else:
+
+                unique_recommendations = list(
+                    dict.fromkeys(recommendations)
+                )
+
+                for rec in unique_recommendations:
+
+                    st.success(rec)
+
+            # =================================================
+            # BRAIN RECOVERY SYSTEM
+            # =================================================
+
+            st.markdown("---")
+
+            st.header("🌱 Kondisi Recovery Anda")
+
+            brainrot_score = 0
+
+            if screen_time > 8:
+                brainrot_score += 30
+
+            if social_media > 6:
+                brainrot_score += 25
+
+            if sleep_hours < 6:
+                brainrot_score += 25
+
+            if stress_level > 7:
+                brainrot_score += 20
+
+            if brainrot_score < 30:
+
+                brainrot_category = "🟢 Risiko Brainrot Rendah"
+
+                brainrot_desc = """
+                Pola aktivitas digital Anda masih relatif sehat.
+                """
+
+            elif brainrot_score < 60:
+
+                brainrot_category = "🟡 Risiko Brainrot Sedang"
+
+                brainrot_desc = """
+                Anda mulai menunjukkan gejala overstimulasi digital.
+                """
+
+            else:
+
+                brainrot_category = "🔴 Risiko Brainrot Tinggi"
+
+                brainrot_desc = """
+                Anda menunjukkan indikasi brainrot tinggi.
+                """
+
+            st.subheader(brainrot_category)
+
+            st.warning(brainrot_desc)
+
+            st.markdown("""
+            ### 🧘 Rekomendasi Pemulihan Otak
             """)
 
-        else:
+            recovery = []
 
-            for item in recovery:
+            if screen_time > 8:
 
-                st.success(item)
+                recovery.append(
+                    "📵 Lakukan pembatasan digital minimal 1–2 jam tanpa gadget."
+                )
 
+            if social_media > 6:
+
+                recovery.append(
+                    "📱 Kurangi konsumsi short-form content."
+                )
+
+            if sleep_hours < 6:
+
+                recovery.append(
+                    "😴 Tingkatkan kualitas tidur menjadi 7–8 jam."
+                )
+
+            if stress_level > 7:
+
+                recovery.append(
+                    "🧘 Lakukan mindfulness atau relaksasi."
+                )
+
+            if productivity < 60:
+
+                recovery.append(
+                    "🎯 Gunakan teknik deep work atau Pomodoro."
+                )
+
+            if exercise < 20:
+
+                recovery.append(
+                    "🏃 Lakukan olahraga ringan."
+                )
+
+            if len(recovery) == 0:
+
+                st.success("""
+                Anda memiliki pola digital yang cukup sehat.
+                """)
+
+            else:
+
+                for item in recovery:
+
+                    st.success(item)
+                
 # =========================================================
-# TAB 4
+# TAB 4 - RECOVERY & WELLNESS AI
 # =========================================================
 
 with tab4:
 
-    st.header("📝 Catatan Dashboard")
+    st.header("🌱 Recovery Center")
 
     st.markdown("""
-    Halaman ini berisi informasi tambahan mengenai
-    kelelahan kognitif, dampak overstimulasi digital,
-    serta proses pemulihan fungsi otak.
+    Recovery Center membantu Anda memahami kondisi keseimbangan digital,
+    mengurangi overstimulasi akibat penggunaan gadget berlebihan,
+    serta memberikan rekomendasi recovery harian untuk menjaga fokus, kesehatan mental, dan kualitas istirahat.
+    """)
+
+    st.markdown("---")
+
+    # =====================================================
+    # AI WELLNESS SUMMARY
+    # =====================================================
+
+    st.header("🧠 AI Wellness Summary")
+
+    data = st.session_state.wellness_result
+
+    if data is None:
+
+        st.warning("""
+        Silakan lakukan Wellness Check terlebih dahulu.
+        """)
+
+    else:
+
+        fatigue = data['fatigue_percent']
+        screen = data['screen_time']
+        sleep = data['sleep_hours']
+        stress = data['stress_level']
+
+        if fatigue <= 35:
+
+            summary = f"""
+            Kondisi mental Anda masih cukup stabil.
+
+            Penggunaan gadget sekitar {screen} jam/hari
+            masih dalam batas aman
+            dan belum memberikan dampak signifikan
+            terhadap fokus maupun keseimbangan mental.
+            """
+
+        elif fatigue <= 65:
+
+            summary = f"""
+            Aktivitas digital harian mulai mempengaruhi
+            fokus dan energi mental Anda.
+
+            Penggunaan gadget {screen} jam/hari,
+            tidur {sleep} jam,
+            serta level stres sedang
+            menunjukkan tanda-tanda kelelahan mental ringan pada diri Anda.
+            """
+
+        else:
+
+            summary = f"""
+            Sistem mendeteksi risiko kelelahan mental tinggi.
+            Penggunaan gadget yang tinggi,
+            kurang tidur, dan level stres tinggi
+            mulai mempengaruhi keseimbangan mental Anda.
+            Disarankan untuk melakukan digital recovery
+            dan mengurangi overstimulasi digital sementara waktu.
+            """
+
+        st.info(summary)
+
+    # =====================================================
+    # DOPAMINE OVERLOAD METER
+    # =====================================================
+
+    st.markdown("---")
+
+    st.header("⚡ Dopamine Overload Meter")
+
+    data = st.session_state.wellness_result
+
+    if data is None:
+
+        st.warning("""
+        Silakan lakukan Wellness Check terlebih dahulu.
+        """)
+
+    else:
+
+        fatigue_percent = data['fatigue_percent']
+
+        prediction = data['prediction']
+
+        screen_time = data['screen_time']
+
+        social_media = data['social_media']
+
+        # =====================================================
+        # SINKRON DENGAN WELLNESS CHECK
+        # =====================================================
+
+        if prediction == "Refreshed":
+
+            dopamine_percent = max(
+                15,
+                fatigue_percent - 10
+            )
+
+            dopamine_status = "🟢 Rendah"
+
+            dopamine_desc = f"""
+            Aktivitas digital Anda masih cukup sehat dan belum menunjukkan overstimulasi berlebihan. Dengan kesimpulan:
+            - Penggunaan gadget sekitar {screen_time} jam/hari
+            
+            * masih dalam batas yang cukup aman untuk fokus dan keseimbangan mental.
+            """
+
+        elif prediction == "Strained":
+
+            dopamine_percent = fatigue_percent
+
+            dopamine_status = "🟡 Sedang"
+
+            dopamine_desc = f"""
+            Sistem mendeteksi tanda-tanda overstimulasi digital ringan. Dengan kesimpulan:
+            - Penggunaan gadget {screen_time} jam/hari
+            - dan penggunaan media sosial {social_media} jam/hari
+            
+            * mulai mempengaruhi fokus, konsentrasi, dan energi mental Anda.
+            """
+
+        else:
+
+            dopamine_percent = min(
+                fatigue_percent + 5,
+                95
+            )
+
+            dopamine_status = "🔴 Tinggi"
+
+            dopamine_desc = f"""
+            Sistem mendeteksi overstimulasi digital tinggi yang berkaitan dengan risiko brainrot dan kelelahan mental berat.
+            Dengan kesimpulan:
+            - Aktivitas digital yang berlebihan,
+            - scrolling media sosial berlebihan,
+            - serta kurangnya durasi waktu tidur.
+            
+            * mulai mempengaruhi fokus dan keseimbangan mental Anda secara signifikan.
+            """
+
+        # =====================================================
+        # OUTPUT
+        # =====================================================
+
+        st.metric(
+            "Tingkat Dopamine Overload",
+            f"{dopamine_percent}%"
+        )
+
+        st.progress(dopamine_percent)
+
+        st.warning(f"""
+        {dopamine_status}
+
+        {dopamine_desc}
+        """)
+
+        # =====================================================
+        # INSIGHT TAMBAHAN
+        # =====================================================
+
+        st.info(f"""
+        📊 Tingkat Dopamine Overload disesuaikan
+        dengan hasil Wellness Check dan Machine Learning Prediction.
+
+        Semakin tinggi nilainya,
+        maka semakin tinggi risiko overstimulasi digital
+        akibat penggunaan gadget berlebihan,
+        media sosial,
+        dan konsumsi konten instan berlebihan.
+        """)
+
+        # =====================================================
+        # VISUALISASI AI
+        # =====================================================
+
+        gauge_dopamine = go.Figure(go.Indicator(
+
+            mode="gauge+number",
+
+            value=dopamine_percent,
+
+            title={
+                'text':
+                "Overstimulasi Digital"
+            },
+
+            gauge={
+
+                'axis': {
+                    'range': [0, 100]
+                },
+
+                'bar': {
+                    'color': "#6366F1"
+                },
+
+                'steps': [
+
+                    {
+                        'range': [0, 35],
+                        'color': "#10B981"
+                    },
+
+                    {
+                        'range': [35, 70],
+                        'color': "#F59E0B"
+                    },
+
+                    {
+                        'range': [70, 100],
+                        'color': "#EF4444"
+                    }
+                ]
+            }
+        ))
+
+        gauge_dopamine.update_layout(
+
+            paper_bgcolor="#0E1117",
+
+            font={
+                'color': "white"
+            },
+
+            height=320
+        )
+
+        st.plotly_chart(
+            gauge_dopamine,
+            use_container_width=True
+        )
+
+        # =====================================================
+        # DAILY RECOVERY CHALLENGE
+        # =====================================================
+
+        st.markdown("---")
+
+        st.header("🎯 Daily Recovery Challenge")
+
+        data = st.session_state.wellness_result
+
+        if data is None:
+
+            st.warning("""
+            Silakan lakukan Wellness Check terlebih dahulu.
+            """)
+
+        else:
+
+            fatigue_percent = data['fatigue_percent']
+
+            prediction = data['prediction']
+
+            screen_time = data['screen_time']
+
+            sleep_hours = data['sleep_hours']
+
+            stress_level = data['stress_level']
+
+            social_media = data['social_media']
+
+            exercise = data['exercise']
+
+        # =====================================================
+        # AI RECOVERY INTRO
+        # =====================================================
+
+        if prediction == "Refreshed":
+
+            st.success("""
+            🌿 Kondisi mental Anda masih cukup stabil.
+            Berikut beberapa challenge ringan yang dapat Anda lakukan
+            untuk menjaga keseimbangan digital:
+            """)
+
+        elif prediction == "Strained":
+
+            st.warning("""
+            ⚠️ Sistem mendeteksi bahwa Anda mengalami gejala awal kelelahan mental ringan.
+            Berikut Challenge yang dapat membantu Anda untuk mengurangi overstimulasi digital berlebihan:
+            """)
+
+        else:
+
+            st.error("""
+            🚨 Sistem mendeteksi risiko kelelahan mental tinggi.
+            Berikut Recovery challenge yang disarankan
+            untuk Anda dalam membantu pemulihan mental dan mengurangi brainrot:
+            """)
+
+        # =====================================================
+        # LIST CHALLENGE
+        # =====================================================
+
+        challenges = []
+
+        # =====================================================
+        # SCREEN TIME TINGGI
+        # =====================================================
+
+        if screen_time > 8:
+
+            challenges.append(
+                "📵 Kurangi screen time 1–2 jam lebih sedikit dari biasanya hari ini."
+            )
+
+        elif screen_time > 5:
+
+            challenges.append(
+                "⏳ Coba lakukan 30 menit tanpa gadget sebelum tidur."
+            )
+
+        # =====================================================
+        # SOCIAL MEDIA TINGGI
+        # =====================================================
+
+        if social_media > 6:
+
+            challenges.append(
+                "📱 Hindari scrolling media sosial selama 1 jam penuh."
+            )
+
+        elif social_media > 3:
+
+            challenges.append(
+                "🎯 Batasi konsumsi short-form content hari ini."
+            )
+
+        # =====================================================
+        # TIDUR RENDAH
+        # =====================================================
+
+        if sleep_hours < 4:
+
+            challenges.append(
+                "😴 Tidur lebih awal dan targetkan minimal 7 jam tidur malam ini."
+            )
+
+        elif sleep_hours < 6:
+
+            challenges.append(
+                "🌙 Hindari gadget 30 menit sebelum tidur."
+            )
+
+        # =====================================================
+        # STRES TINGGI
+        # =====================================================
+
+        if stress_level >= 8:
+
+            challenges.append(
+                "🧘 Lakukan meditasi atau relaksasi selama 15–20 menit."
+            )
+
+        elif stress_level >= 6:
+
+            challenges.append(
+                "🎵 Dengarkan musik relaksasi tanpa membuka media sosial."
+            )
+
+        # =====================================================
+        # AKTIVITAS FISIK RENDAH
+        # =====================================================
+
+        if exercise < 15:
+
+            challenges.append(
+                "🚶 Jalan santai atau olahraga ringan minimal 20 menit."
+            )
+
+        elif exercise < 30:
+
+            challenges.append(
+                "🤸 Lakukan stretching ringan untuk membantu recovery tubuh."
+            )
+
+        # =====================================================
+        # FATIGUE TINGGI
+        # =====================================================
+
+        if fatigue_percent >= 75:
+
+            challenges.append(
+                "📚 Lakukan aktivitas non-digital seperti membaca buku fisik."
+            )
+
+            challenges.append(
+                "🌳 Luangkan waktu di area terbuka tanpa gadget."
+            )
+
+        # =====================================================
+        # KONDISI MASIH STABIL
+        # =====================================================
+
+        if len(challenges) == 0:
+
+            st.success("""
+            🌿 Kondisi digital wellness Anda masih cukup baik.
+
+            Pertahankan pola hidup sehat,
+            kualitas tidur,
+            dan keseimbangan aktivitas digital.
+            """)
+
+        # =====================================================
+        # TAMPILKAN CHALLENGE
+        # =====================================================
+
+        else:
+
+            unique_challenges = list(
+                dict.fromkeys(challenges)
+            )
+
+            for challenge in unique_challenges:
+
+                st.success(challenge)
+
+        # =====================================================
+        # RECOVERY SCORE
+        # =====================================================
+
+        recovery_score = max(
+            100 - fatigue_percent,
+            5
+        )
+
+        st.markdown("---")
+
+        st.metric(
+            "Recovery Readiness Score",
+            f"{recovery_score}%"
+        )
+
+        if recovery_score >= 70:
+
+            st.success("""
+            🌿 Kondisi recovery Anda cukup baik.
+            """)
+
+        elif recovery_score >= 40:
+
+            st.warning("""
+            ⚠️ Recovery mental Anda perlu ditingkatkan.
+            """)
+
+        else:
+
+            st.error("""
+            🚨 Kondisi mental Anda membutuhkan recovery lebih serius.
+            """)
+
+# =========================================================
+# TAB 5 - PROGRESS TRACKER
+# =========================================================
+
+with tab5:
+
+    st.header("📈 Progress Tracker")
+    
+    history = st.session_state.progress_history
+
+    if len(history) == 0:
+
+        st.warning("""
+        Belum ada data progress.
+
+        Silakan lakukan Wellness Check terlebih dahulu.
+        """)
+
+    else:
+
+        history_df = pd.DataFrame(history)
+
+        history_df['Check'] = range(
+            1,
+            len(history_df) + 1
+        )
+
+        fig_progress = px.line(
+
+            history_df,
+
+            x='Check',
+            y='Fatigue Risk',
+
+            markers=True,
+
+            title='Perkembangan Risiko Kelelahan Mental'
+        )
+
+        fig_progress.update_layout(
+
+            paper_bgcolor="#0E1117",
+            plot_bgcolor="#0E1117",
+            font_color="white",
+
+            height=450
+        )
+
+        st.plotly_chart(
+            fig_progress,
+            use_container_width=True
+        )
+
+        latest = history_df.iloc[-1]['Fatigue Risk']
+
+        first = history_df.iloc[0]['Fatigue Risk']
+
+        # =====================================================
+        # INTERPRETASI PERKEMBANGAN
+        # =====================================================
+
+        if latest < first:
+
+            st.success("""
+            📉 Kondisi mental Anda menunjukkan perkembangan positif.
+
+            Risiko kelelahan mental mulai menurun
+            dibandingkan pemeriksaan sebelumnya.
+            """)
+
+        elif latest > first:
+
+            st.error("""
+            📈 Risiko kelelahan mental Anda meningkat.
+
+            Aktivitas digital dan stres harian
+            mulai memberikan dampak yang lebih besar.
+            """)
+
+        else:
+
+            st.info("""
+            📊 Kondisi mental Anda relatif stabil.
+            """)
+
+        # =====================================================
+        # TABEL HISTORY
+        # =====================================================
+
+        st.markdown("---")
+
+        st.subheader("🗂 Riwayat Pemeriksaan")
+
+        st.dataframe(
+            history_df,
+            use_container_width=True
+        )
+    
+    # =====================================================
+    # LOAD HISTORY DATAFRAME
+    # =====================================================
+
+    history_df = pd.DataFrame(
+        st.session_state.progress_history
+    )
+    # =====================================================
+    # RECOVERY TIMELINE
+    # =====================================================
+
+    st.markdown("---")
+
+    st.subheader("📅 Recovery Timeline")
+
+    if len(history_df) > 0:
+
+        timeline_fig = px.line(
+
+            history_df,
+
+            x='Date',
+
+            y='Fatigue Risk',
+
+            markers=True,
+
+            title="Perkembangan Risiko Mental Harian"
+        )
+
+        timeline_fig.update_layout(
+
+            paper_bgcolor="#0E1117",
+
+            plot_bgcolor="#0E1117",
+
+            font=dict(color="white")
+        )
+
+        st.plotly_chart(
+            timeline_fig,
+            use_container_width=True
+        )
+
+    else:
+
+        st.info("""
+        Belum ada histori pemeriksaan.
+        """)
+    
+    # =====================================================
+    # RECOVERY STREAK
+    # =====================================================
+
+    st.markdown("---")
+
+    st.subheader("🔥 Recovery Streak")
+
+    if len(history_df) >= 2:
+
+        streak = 0
+
+        fatigue_values = history_df[
+            'Fatigue Risk'
+        ].tolist()
+
+        for i in range(1, len(fatigue_values)):
+
+            if fatigue_values[i] < fatigue_values[i - 1]:
+
+                streak += 1
+
+        st.metric(
+            "Recovery Improvement Streak",
+            f"{streak} sesi"
+        )
+
+        if streak >= 3:
+
+            st.success("""
+            🌿 Kondisi mental Anda menunjukkan perkembangan positif.
+            """)
+
+        else:
+
+            st.warning("""
+            Recovery Anda masih belum stabil.
+            """)
+
+    else:
+
+        st.info("""
+        Minimal diperlukan 2 histori pemeriksaan.
+        """)
+        
+    # =====================================================
+    # TREND MENTAL
+    # =====================================================
+
+    st.markdown("---")
+
+    st.subheader("📈 Trend Mental")
+
+    if len(history_df) >= 2:
+
+        latest = history_df[
+            'Fatigue Risk'
+        ].iloc[-1]
+
+        previous = history_df[
+            'Fatigue Risk'
+        ].iloc[-2]
+
+        if latest < previous:
+
+            st.success("""
+            📉 Tingkat kelelahan mental Anda mulai berkurang.
+            Kondisi digital wellness menunjukkan perkembangan positif.
+            """)
+
+        elif latest > previous:
+
+            st.error("""
+            📈 Risiko mental Anda meningkat.
+            Disarankan meningkatkan recovery.
+            """)
+
+        else:
+
+            st.info("""
+            ➖ Kondisi mental Anda relatif stabil.
+            """)
+
+    else:
+
+        st.info("""
+        Belum cukup data untuk melihat trend.
+        """)
+    
+    # =====================================================
+    # MOOD JOURNAL
+    # =====================================================
+
+    st.markdown("---")
+
+    st.subheader("😊 Mood Journal")
+
+    mood_note = st.text_area(
+        "Bagaimana kondisi Anda hari ini?"
+    )
+
+    if st.button("💾 Simpan Catatan"):
+
+        with open(
+            "mood_journal.txt",
+            "a",
+            encoding="utf-8"
+        ) as file:
+
+            file.write(
+                f"{datetime.now()} - {mood_note}\n"
+            )
+
+        st.success("""
+        Catatan berhasil disimpan.
+        """)
+
+
+# =========================================================
+# TAB 6
+# =========================================================
+
+with tab6:
+
+    st.header("📘 Panduan & Insight")
+
+    st.markdown("""
+    Panduan & Insight membantu Anda memahami dampak aktivitas digital,
+    menjaga keseimbangan mental, serta memberikan edukasi sederhana
+    tentang recovery dan digital wellness sehari-hari.
     """)
 
     st.markdown("---")
@@ -797,8 +1898,6 @@ with tab4:
     Cognitive fatigue atau kelelahan kognitif merupakan kondisi
     penurunan kemampuan mental akibat aktivitas digital berlebihan,
     kurang tidur, peningkatan stres, serta overload informasi digital.
-
-    <br>
 
     Kondisi ini dapat menyebabkan:
 
@@ -895,17 +1994,9 @@ with tab4:
 
     Otak manusia memiliki kemampuan neuroplasticity,
     yaitu kemampuan untuk membentuk ulang jalur saraf
-    berdasarkan kebiasaan baru.
+    berdasarkan kebiasaan baru. Artinya: brainrot atau kelelahan akibat overstimulasi digital bukan kondisi permanen.
 
-    <br>
-
-    Artinya:
-    brainrot atau kelelahan akibat overstimulasi digital
-    bukan kondisi permanen.
-
-    <br>
-
-    Kebiasaan sehat seperti:
+    Berikut beberapa kebiasaan sehat yang dapat membantu memulihkan fokus, konsentrasi, dan kesehatan mental secara bertahap. seperti:
 
     <ul style="
     line-height:1.5;
@@ -920,9 +2011,6 @@ with tab4:
     <li>Mengurangi short-form content</li>
 
     </ul>
-
-    dapat membantu memulihkan fokus,
-    konsentrasi, dan kesehatan mental secara bertahap.
 
     </p>
 
