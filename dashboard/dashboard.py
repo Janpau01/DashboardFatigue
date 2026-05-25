@@ -562,7 +562,7 @@ section[data-testid="stSidebar"] .stButton>button:hover {
 
 st.sidebar.markdown("""
 
-# 🌿 Recovera
+# Recovera
 
 """)
 
@@ -616,7 +616,7 @@ if menu == "🏠 Beranda":
         line-height:1.1;
     ">
 
-    🌿 Welcome to Recovera
+     Welcome to Recovera 🌿
     
     <p>
     Track Your Energy,
