@@ -602,31 +602,10 @@ menu = st.session_state.menu
 if menu == "🏠 Beranda":
 
     st.markdown("""
-
-    <div style="
-        max-width:850px;
-        padding:35px 10px 0px 15px;
-    ">
-
-    <h1 style="
-        font-size:80px;
-        color:white;
-        margin-bottom:12px;
-        line-height:1.1;
-    ">
-
     🌿 Welcome to Recovera
     
-    <p>
-    Track Your Energy,
-    Balance Your Digital Life,
-    and Reclaim Your Focus
-    with Recovera.
-    </p>
-
-    </div>
-
-    """, unsafe_allow_html=True)
+    Track Your Energy, Balance Your Digital Life, and Reclaim Your Focus with Recovera.
+    """)
     
     st.markdown("""
 
