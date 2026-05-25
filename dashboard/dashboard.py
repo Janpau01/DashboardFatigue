@@ -605,7 +605,7 @@ if menu == "🏠 Beranda":
 
     <div style="
         max-width:850px;
-        padding:35px 10px 10px 15px;
+        padding:35px 10px 0px 15px;
     ">
 
     <h1 style="
