@@ -2339,34 +2339,6 @@ elif menu == "📈 Journey":
         Mood Journal berhasil disimpan.
         """)
     
-    # =====================================================
-    # TAMPILKAN HISTORY JOURNAL
-    # =====================================================
-
-    st.markdown("---")
-
-    st.subheader("📖 Riwayat Mood Journal")
-
-    if len(st.session_state.mood_history) > 0:
-
-        mood_history_df = pd.DataFrame(
-            st.session_state.mood_history
-        )
-
-        st.dataframe(
-
-            mood_history_df[::-1],
-
-            use_container_width=True
-        )
-
-    else:
-
-        st.info("""
-        Belum ada Mood Journal tersimpan.
-        """)
-
-
 # =========================================================
 # TAB 5
 # =========================================================
