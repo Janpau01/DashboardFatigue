@@ -619,18 +619,11 @@ if menu == "🏠 Beranda":
 
     </h1>
 
-    <p style="
-        font-size:22px;
-        color:#D1D5DB;
-        line-height:1.7;
-        margin-top:0px;
-    ">
-
+    <p>
     Track Your Energy,
     Balance Your Digital Life,
     and Reclaim Your Focus
     with Recovera.
-
     </p>
 
     </div>
