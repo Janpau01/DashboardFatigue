@@ -13,6 +13,7 @@ from datetime import datetime
 # =====================================================
 
 history_file = "progress_history.csv"
+mood_file = "mood_journal.csv"
 
 # =====================================================
 # SESSION STATE
@@ -47,6 +48,24 @@ if 'progress_history' not in st.session_state:
         st.session_state.progress_history = []
         
         wellness_score = 100
+
+# =====================================================
+# LOAD MOOD JOURNAL
+# =====================================================
+
+if 'mood_history' not in st.session_state:
+
+    if os.path.exists(mood_file):
+
+        mood_df = pd.read_csv(mood_file)
+
+        st.session_state.mood_history = (
+            mood_df.to_dict('records')
+        )
+
+    else:
+
+        st.session_state.mood_history = []
 
 # =========================================================
 # KONFIGURASI HALAMAN
@@ -2270,24 +2289,81 @@ elif menu == "📈 Journey":
 
     st.subheader("😊 Mood Journal")
 
+    mood = st.selectbox(
+
+    "Mood Hari Ini",
+
+    [
+
+        "😊 Bahagia",
+        "😌 Tenang",
+        "😴 Lelah",
+        "😵 Overwhelmed",
+        "😔 Stres"
+    ]
+    )
+
     mood_note = st.text_area(
         "Bagaimana kondisi Anda hari ini?"
     )
 
-    if st.button("💾 Simpan Catatan"):
+    if st.button("💾 Simpan Mood Journal"):
 
-        with open(
-            "mood_journal.txt",
-            "a",
-            encoding="utf-8"
-        ) as file:
+        new_mood = {
 
-            file.write(
-                f"{datetime.now()} - {mood_note}\n"
-            )
+            "Date": datetime.now().strftime(
+                "%d-%m-%Y %H:%M"
+            ),
+
+            "Mood": mood,
+
+            "Note": mood_note
+        }
+
+        # SAVE SESSION
+        st.session_state.mood_history.append(
+            new_mood
+        )
+
+        # SAVE CSV
+        mood_df = pd.DataFrame(
+            st.session_state.mood_history
+        )
+
+        mood_df.to_csv(
+            mood_file,
+            index=False
+        )
 
         st.success("""
-        Catatan berhasil disimpan.
+        Mood Journal berhasil disimpan.
+        """)
+    
+    # =====================================================
+    # TAMPILKAN HISTORY JOURNAL
+    # =====================================================
+
+    st.markdown("---")
+
+    st.subheader("📖 Riwayat Mood Journal")
+
+    if len(st.session_state.mood_history) > 0:
+
+        mood_history_df = pd.DataFrame(
+            st.session_state.mood_history
+        )
+
+        st.dataframe(
+
+            mood_history_df[::-1],
+
+            use_container_width=True
+        )
+
+    else:
+
+        st.info("""
+        Belum ada Mood Journal tersimpan.
         """)
 
 
