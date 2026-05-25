@@ -53,10 +53,12 @@ if 'progress_history' not in st.session_state:
 # =========================================================
 
 st.set_page_config(
-    page_title="Dashboard Kelelahan Kognitif",
-    page_icon="🧠",
-    layout="wide"
+    page_title="Recovera",
+    page_icon="🌿",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
 
 # =====================================================
 # PREMIUM WELLNESS CSS
@@ -440,196 +442,235 @@ st.markdown("""
     line-height: 1.6;
 }
 
+/* =====================================================
+RESPONSIVE MOBILE
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .block-container {
+
+        padding-top: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    h1 {
+
+        font-size: 32px !important;
+    }
+
+    h2 {
+
+        font-size: 26px !important;
+    }
+
+    h3 {
+
+        font-size: 22px !important;
+    }
+
+    p {
+
+        font-size: 15px !important;
+    }
+
+    [data-testid="metric-container"] {
+
+        margin-bottom: 15px;
+    }
+
+}
+
+/* =====================================================
+METRIC CARD
+===================================================== */
+
+.metric-card {
+
+    background: rgba(17,24,39,0.9);
+
+    padding: 22px;
+
+    border-radius: 18px;
+
+    border: 1px solid rgba(255,255,255,0.05);
+
+    box-shadow: 0 0 18px rgba(0,0,0,0.15);
+}
+
+/* =========================================
+SIDEBAR
+========================================= */
+
+section[data-testid="stSidebar"] {
+
+    background: linear-gradient(
+        180deg,
+        #0F172A,
+        #111827
+    );
+
+    border-right:
+    1px solid rgba(255,255,255,0.05);
+}
+
+/* =========================================
+SIDEBAR BUTTON
+========================================= */
+
+section[data-testid="stSidebar"] .stButton>button {
+
+    width: 100%;
+
+    border-radius: 14px;
+
+    padding: 14px;
+
+    background: rgba(255,255,255,0.03);
+
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.05);
+
+    text-align: left;
+
+    font-size: 17px;
+
+    margin-bottom: 10px;
+
+    transition: 0.3s;
+}
+
+/* HOVER */
+
+section[data-testid="stSidebar"] .stButton>button:hover {
+
+    background: rgba(0,212,170,0.15);
+
+    border: 1px solid #00d4aa;
+
+    transform: translateX(4px);
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# HEADER
-# =========================================================
+# =====================================================
+# SIDEBAR NAVIGATION
+# =====================================================
 
-st.title("🌿 Digital Wellness & Recovery Dashboard")
+st.sidebar.markdown("""
 
-st.markdown("""
-    Pantau kondisi digital wellness, kualitas recovery,
-    dan keseimbangan aktivitas harian Anda melalui insight,
-    pemantauan progres, serta rekomendasi pemulihan yang lebih sehat.
+# 🌿 Recovera
+
 """)
 
-st.markdown("---")
+# DEFAULT MENU
+if "menu" not in st.session_state:
 
-# =========================================================
-# TABS
-# =========================================================
+    st.session_state.menu = "🏠 Beranda"
 
-tab1, tab2, tab3, tab4, tab5, = st.tabs([
-    "🏠 Beranda",
-    "🌿 Daily Check",
-    "🌱 Recovery",
-    "📈 Journey",
-    "📘 Guide"
-])
+# BUTTON MENU
+if st.sidebar.button("🏠 Beranda", use_container_width=True):
+
+    st.session_state.menu = "🏠 Beranda"
+
+if st.sidebar.button("🌿 Daily Check", use_container_width=True):
+
+    st.session_state.menu = "🌿 Daily Check"
+
+if st.sidebar.button("🌱 Recovery", use_container_width=True):
+
+    st.session_state.menu = "🌱 Recovery"
+
+if st.sidebar.button("📈 Journey", use_container_width=True):
+
+    st.session_state.menu = "📈 Journey"
+
+if st.sidebar.button("📘 Guide", use_container_width=True):
+
+    st.session_state.menu = "📘 Guide"
+
+# ACTIVE MENU
+menu = st.session_state.menu
 
 # =========================================================
 # TAB 1
 # =========================================================
 
-with tab1:
+if menu == "🏠 Beranda":
 
-    st.header("🏠 Beranda Utama")
+    st.markdown("""
 
-    avg_screen = round(df['screen_time'].mean(), 2)
-    avg_sleep = round(df['sleep_hours'].mean(), 2)
-    avg_stress = round(df['stress_level'].mean(), 2)
+    <div style="
+        max-width:850px;
+        padding:0px 10px 12px 10px;
+    ">
 
-    high_risk = len(
-        df[df['fatigue_category'] == 'Tinggi']
-    )
+    <h1 style="
+        font-size:50px;
+        color:white;
+        margin-bottom:6px;
+        line-height:1.1;
+    ">
 
-    risk_percent = round(
-        (high_risk / len(df)) * 100,
-        1
-    )
+    🌿 Welcome to Recovera
+
+    </h1>
+
+    <p style="
+        font-size:22px;
+        color:#D1D5DB;
+        line-height:1.7;
+        margin-top:0px;
+    ">
+
+    Track Your Energy,
+    Balance Your Digital Life,
+    and Reclaim Your Focus
+    with Recovera.
+
+    </p>
+
+    </div>
+
+    """, unsafe_allow_html=True)
     
-    # =====================================================
-    # WELLNESS SCORE REALTIME + HISTORY
-    # =====================================================
+    st.markdown("""
 
-    if (
-        "wellness_result" in st.session_state
-        and
-        st.session_state.wellness_result is not None
-    ):
+    <div style="
+        background-color:#111827;
+        padding:10px;
+        border-radius:22px;
+        border-left:5px solid #22c55e;
+        margin-bottom:5px;
+    ">
 
-        latest_risk = st.session_state.wellness_result[
-            'fatigue_percent'
-        ]
+    <h3 style="
+        color:white;
+        margin-bottom:5px;
+    ">
+    ✨ Your Recovery Space
+    </h3>
 
-        wellness_score = 100 - latest_risk
+    <p>
+    Aktivitas digital yang berlebihan dapat memengaruhi fokus, kualitas tidur, dan keseimbangan mental sehari-hari.
 
-    # =====================================================
-    # JIKA DASHBOARD DIRELOAD
-    # AMBIL HISTORY TERAKHIR
-    # =====================================================
+    Melalui Recovera, Anda dapat memahami pola digital,
+    membangun kebiasaan recovery yang sehat,
+    dan menjaga wellness secara lebih seimbang.
+    </p>
 
-    elif len(st.session_state.progress_history) > 0:
+    </div>
 
-        latest_risk = st.session_state.progress_history[-1][
-            'Fatigue Risk'
-        ]
-
-        wellness_score = 100 - latest_risk
-
-    # =====================================================
-    # DEFAULT
-    # =====================================================
-
-    else:
-
-        wellness_score = 100
-    
-    # =====================================================
-    # WELLNESS SCORE
-    # =====================================================
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.metric(
-            "Rata-rata Penggunaan Gadget",
-            f"{avg_screen} jam"
-        )
-
-    with col2:
-        st.metric(
-            "Rata-rata Durasi Tidur",
-            f"{avg_sleep} jam"
-        )
-
-    with col3:
-        st.metric(
-            "Rata-rata Tingkat Stres",
-            f"{avg_stress}/10"
-        )
-
-    with col4:
-
-        st.metric(
-
-        "🌿 Wellness Score",
-
-        f"{wellness_score:.0f}/100"
-    )
-
-    if wellness_score >= 80:
-
-        st.success(
-            "🌿 Kondisi wellness sangat baik"
-        )
-
-    elif wellness_score >= 60:
-
-        st.info(
-            "🙂 Kondisi cukup stabil"
-        )
-
-    elif wellness_score >= 40:
-
-        st.warning(
-            "😵 Perlu menjaga keseimbangan digital"
-        )
-
-    else:
-
-        st.error(
-            "🔴 Risiko digital fatigue tinggi"
-        )
-
-    # =====================================================
-    # LAYOUT INSIGHT
-    # =====================================================
-
-    col1, col2 = st.columns([2, 1])
-
-    # =====================================================
-    # CHART ANALISIS
-    # =====================================================
-
-    with col1:
-
-        # ================================================
-        # KATEGORI PENGGUNAAN GADGET
-        # ================================================
-
-        df['kategori_gadget'] = pd.cut(
-            df['screen_time'],
-            bins=[0, 5, 8, 24],
-            labels=[
-                'Rendah',
-                'Sedang',
-                'Tinggi'
-            ]
-        )
-
-        # ================================================
-        # RATA-RATA FATIGUE
-        # ================================================
-
-        fatigue_summary = (
-            df.groupby('kategori_gadget')['fatigue_score']
-            .mean()
-            .reset_index()
-        )
-
-        fatigue_summary.columns = [
-            'Kategori Penggunaan Gadget',
-            'Rata-rata Fatigue'
-        ]
+    """, unsafe_allow_html=True)
 
     # =====================================================
     # WELLNESS INSIGHT CHART
     # =====================================================
 
-    st.subheader("📈 Insight Aktivitas Digital")
+    st.subheader("📊 Pengaruh Aktivitas Digital terhadap Kondisi Mental")
 
     chart_df = pd.DataFrame({
 
@@ -739,6 +780,30 @@ with tab1:
         use_container_width=True
     )
     
+    st.markdown("---")
+
+    st.subheader("🚀 Mulai Perjalanan Wellness Anda")
+
+    action1, action2 = st.columns(2)
+
+    with action1:
+
+        st.info("""
+        🌿 Daily Check
+
+        Lakukan pemeriksaan kondisi digital wellness harian
+        berdasarkan aktivitas dan kebiasaan digital Anda.
+        """)
+
+    with action2:
+
+        st.success("""
+        🌱 Recovery Center
+
+        Dapatkan rekomendasi recovery dan aktivitas sehat
+        untuk membantu menjaga keseimbangan mental.
+        """)
+    
     # =====================================================
     # PIE CHART DISTRIBUSI KONDISI MENTAL
     # =====================================================
@@ -747,41 +812,32 @@ with tab1:
 
     st.subheader("🌿 Gambaran Kondisi Digital & Mental")
 
-    col1, col2 = st.columns([1.1, 0.9], gap="large")
+    # =====================================================
+    # LAYOUT 2 KOLOM
+    # =====================================================
 
-    with col1:
+    left_col, right_col = st.columns(
+        [1.1, 0.9],
+        gap="large"
+    )
 
-        # ============================================
-        # DATA PIE CHART
-        # ============================================
+    # =====================================================
+    # KOLOM KIRI -> PIE CHART
+    # =====================================================
+
+    with left_col:
 
         labels = [
-
             "🔴 Near-Burnout",
             "🟡 Strained",
             "🟢 Refreshed"
-
         ]
 
         values = [
-
             53,
             33,
             14
-
         ]
-
-        colors = [
-
-            "#ff4b6e",
-            "#f7b731",
-            "#2ecc71"
-
-        ]
-
-        # ============================================
-        # PIE CHART
-        # ============================================
 
         fig_pie = px.pie(
 
@@ -797,14 +853,8 @@ with tab1:
                 "🔴 Near-Burnout": "#ff4b6e",
                 "🟡 Strained": "#f7b731",
                 "🟢 Refreshed": "#2ecc71"
-
             }
-
         )
-
-        # ============================================
-        # STYLE CHART
-        # ============================================
 
         fig_pie.update_traces(
 
@@ -813,79 +863,92 @@ with tab1:
             textinfo='percent+label',
 
             pull=[0.03, 0.02, 0.02]
-
         )
 
         fig_pie.update_layout(
 
-            height=470,
+            height=500,
 
             paper_bgcolor="#0B1120",
 
             plot_bgcolor="#0B1120",
 
             font=dict(
-
                 color="white",
                 size=14
-
             ),
 
             legend=dict(
-
                 orientation="h",
-                y=-0.1,
+                y=-0.12,
                 x=0.15
-
             ),
 
             margin=dict(
-
-                t=40,
-                b=40,
+                t=20,
+                b=20,
                 l=20,
                 r=20
-
             )
-
         )
 
         st.plotly_chart(
-
             fig_pie,
             use_container_width=True
-
         )
 
     # =====================================================
-    # PENJELASAN INSIGHT
+    # KOLOM KANAN -> RINGKASAN
     # =====================================================
 
-    with col2:
+    with right_col:
 
         st.markdown("""
-
         <div style="
-            background-color: rgba(20,30,48,0.95);
-            padding: 25px;
-            border-radius: 18px;
-            border-left: 5px solid #00d4aa;
+            background-color:#111827;
+            padding:22px 30px;
+            border-radius:20px;
+            min-height:350px;
+            border-left:5px solid #00CC96;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+            overflow:hidden;
         ">
 
-        <h3 style="color:white;">
+        <h2 style="
+            color:white;
+            margin-top:0px;
+            margin-bottom:10px;
+            font-size:34px;
+            line-height:1.2;
+        ">
         🧠 Ringkasan Kondisi Mental
-        </h3>
+        </h2>
 
-        <p style="color:#E5E7EB; font-size:16px; line-height:1.9;">
+        <p style="
+            color:#E5E7EB;
+            font-size:20px;
+            line-height:1.5;
+            margin-bottom:10px;
+        ">
 
         Sebagian besar pengguna berada pada kondisi
         <b style="color:#ff4b6e;">
         Near-Burnout
         </b>
         akibat tingginya screen time,
-        stres harian, dan kurangnya recovery mental.
+        stres harian,
+        dan kurangnya recovery mental.
 
-        <br>
+        </p>
+
+        <p style="
+            color:#E5E7EB;
+            font-size:20px;
+            line-height:1.5;
+            margin-bottom:10px;
+        ">
 
         Pengguna dengan kondisi
         <b style="color:#f7b731;">
@@ -894,17 +957,30 @@ with tab1:
         mulai menunjukkan tanda kelelahan digital
         yang dapat memengaruhi fokus dan produktivitas.
 
-        <br>
+        </p>
 
-        Sementara itu, pengguna dengan kondisi
+        <p style="
+            color:#E5E7EB;
+            font-size:20px;
+            line-height:1.5;
+            margin-bottom:10px;
+        ">
+
+        Pengguna dengan kondisi
         <b style="color:#2ecc71;">
         Refreshed
         </b>
-        cenderung memiliki pola aktivitas digital
-        yang lebih seimbang dan kualitas recovery
-        yang lebih baik.
+        cenderung memiliki pola digital yang lebih seimbang
+        dan kualitas recovery yang lebih baik.
 
-        <br>
+        </p>
+
+        <p style="
+            color:#A7F3D0;
+            font-size:18px;
+            line-height:1.5;
+            margin-top:auto;
+        ">
 
         🌿 Menjaga kualitas tidur,
         mengurangi overstimulasi digital,
@@ -914,15 +990,13 @@ with tab1:
         </p>
 
         </div>
-
         """, unsafe_allow_html=True)
-        
 
 # =========================================================
 # TAB 2
 # =========================================================
 
-with tab2:
+elif menu == "🌿 Daily Check":
 
     st.header("🌿 Daily Mind Check")
 
@@ -1497,7 +1571,7 @@ with tab2:
 # TAB 3 - RECOVERY 
 # =========================================================
 
-with tab3:
+elif menu == "🌱 Recovery":
 
     st.header("🌱 Recovery Center")
 
@@ -1963,7 +2037,7 @@ with tab3:
 # TAB 4 - PROGRESS TRACKER
 # =========================================================
 
-with tab4:
+elif menu == "📈 Journey":
 
     st.header("📈 Progress Tracker")
     
@@ -2229,7 +2303,7 @@ with tab4:
 # TAB 5
 # =========================================================
 
-with tab5:
+elif menu == "📘 Guide":
 
     st.header("📘 Panduan")
 
