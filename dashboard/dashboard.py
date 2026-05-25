@@ -605,11 +605,11 @@ if menu == "🏠 Beranda":
 
     <div style="
         max-width:850px;
-        padding:15px 10px 10px 15px;
+        padding:35px 10px 10px 15px;
     ">
 
     <h1 style="
-        font-size:60px;
+        font-size:80px;
         color:white;
         margin-bottom:12px;
         line-height:1.1;
