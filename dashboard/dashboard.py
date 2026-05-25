@@ -609,9 +609,9 @@ if menu == "🏠 Beranda":
     ">
 
     <h1 style="
-        font-size:50px;
+        font-size:60px;
         color:white;
-        margin-bottom:6px;
+        margin-bottom:12px;
         line-height:1.1;
     ">
 
