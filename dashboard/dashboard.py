@@ -616,15 +616,17 @@ if menu == "🏠 Beranda":
     ">
 
     🌿 Welcome to Recovera
-
-    </h1>
-
+    
     <p>
     Track Your Energy,
     Balance Your Digital Life,
     and Reclaim Your Focus
     with Recovera.
     </p>
+
+    </h1>
+
+
 
     </div>
 
