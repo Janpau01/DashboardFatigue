@@ -5,9 +5,12 @@ plotly==5.22.0
 scikit-learn==1.3.2
 
 opencv-python-headless==4.8.1.78
+
 fer==22.5.1
 mtcnn==0.1.1
 moviepy==1.0.3
+
+tensorflow-cpu==2.15.0
 
 pillow==10.2.0
 setuptools==69.5.1
