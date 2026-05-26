@@ -3,14 +3,8 @@ pandas
 numpy==1.26.4
 plotly
 scikit-learn
-
 opencv-python==4.8.1.78
-deepface==0.0.79
-
-tensorflow==2.15.0
-keras==2.15.0
-
-protobuf==4.25.3
-
-tf-keras
+fer==22.5.1
+mtcnn==0.1.1
+moviepy
 pillow

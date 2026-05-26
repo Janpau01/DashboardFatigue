@@ -9,6 +9,8 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 import streamlit as st
+from fer import FER
+from PIL import Image
 
 from datetime import datetime
 
@@ -429,6 +431,15 @@ df = load_data()
 model = joblib.load(
     "model/fatigue_model.pkl"
 )
+
+# =====================================================
+# LOAD FER MODEL
+# =====================================================
+
+@st.cache_resource
+def load_fer_model():
+
+    return FER(mtcnn=True)
 
 # =========================================================
 # CUSTOM CSS
@@ -2420,12 +2431,11 @@ elif menu == "📈 Journey":
 # AI FACE CHECK
 # =====================================================
 
-elif menu == "👁 Face Check":
+# =====================================================
+# LOAD FER MODEL
+# =====================================================
 
-    # IMPORT DI SINI
-    from deepface import DeepFace
-    from PIL import Image
-    import numpy as np
+elif menu == "👁 Face Check":
 
     st.title("😊 Facial Mood & Fatigue Check")
 
@@ -2457,27 +2467,27 @@ elif menu == "👁 Face Check":
             "🔍 Sistem sedang menganalisis..."
         ):
 
-            result = DeepFace.analyze(
+            detector = load_fer_model()
 
-            img_array,
+            result = detector.detect_emotions(img_array)
 
-            actions=['emotion'],
+            if result:
 
-            detector_backend='opencv',
+                emotions = result[0]["emotions"]
 
-            enforce_detection=False,
+                emotion = max(emotions, key=emotions.get)
 
-            silent=True
-        )
+                confidence = emotions[emotion] * 100
+            
+            else:
 
-            emotion = result[0]['dominant_emotion']
-
+                st.warning("Wajah tidak terdeteksi.")
 
         # =============================================
         # RECOVERA AI INTERPRETATION
         # =============================================
 
-        confidence = result[0]['emotion'][emotion]
+        emotion = max(emotions, key=emotions.get)
 
         if emotion == "happy":
 
