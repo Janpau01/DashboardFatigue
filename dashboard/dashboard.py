@@ -1,10 +1,14 @@
-import streamlit as st
 import pandas as pd
-import os
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import joblib
+import os
+
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+import streamlit as st
 
 from datetime import datetime
 
@@ -467,12 +471,11 @@ RESPONSIVE MOBILE
 
 @media (max-width: 768px) {
 
-    .block-container {
+    .mobile-title {
 
-        padding-top: 1rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        font-size: 52px !important;
     }
+}
 
     h1 {
 
@@ -607,6 +610,10 @@ if st.sidebar.button("📈 Journey", use_container_width=True):
 
     st.session_state.menu = "📈 Journey"
 
+if st.sidebar.button("👁 Face Check", use_container_width=True):
+
+    st.session_state.menu = "👁 Face Check"
+
 if st.sidebar.button("📘 Guide", use_container_width=True):
 
     st.session_state.menu = "📘 Guide"
@@ -623,25 +630,33 @@ if menu == "🏠 Beranda":
     st.markdown("""
 
     <div style="
-        max-width:850px;
-        padding:35px 10px 0px 15px;
+        max-width:1100px;
+        padding:40px 20px 20px 20px;
     ">
 
-    <h1 style="
-        font-size:clamp(34px, 6vw, 72px);
+    <h1 class="mobile-title" style="
+        font-size:clamp(42px, 7vw, 96px);
+        font-weight:700;
         color:white;
-        margin-top:0px;
-        margin-bottom:6px;
-        line-height:1.1;
+        margin:0;
+        line-height:1.05;
     ">
 
-     Welcome to Recovera 🌿
-    
-    <p>
-    Track Your Energy,
-    Balance Your Digital Life,
-    and Reclaim Your Focus
-    with Recovera.
+    Welcome to Recovera 🌿
+
+    </h1>
+
+    <p style="
+        font-size:clamp(18px, 2vw, 30px);
+        color:#E5E7EB;
+        margin-top:18px;
+        line-height:1.5;
+        max-width:900px;
+    ">
+
+    Track Your Energy, Balance Your Digital Life,
+    and Reclaim Your Focus with Recovera.
+
     </p>
 
     </div>
@@ -681,7 +696,9 @@ if menu == "🏠 Beranda":
     # WELLNESS INSIGHT CHART
     # =====================================================
 
-    st.subheader("📊 Pengaruh Aktivitas Digital terhadap Kondisi Mental")
+    st.subheader(
+        "📊 Pengaruh Aktivitas Digital terhadap Kondisi Mental"
+    )
 
     chart_df = pd.DataFrame({
 
@@ -707,88 +724,148 @@ if menu == "🏠 Beranda":
         ]
     })
 
-    fig = px.bar(
+    # =====================================================
+    # BAR CHART
+    # =====================================================
 
-        chart_df,
+    fig = go.Figure()
 
-        x="Kategori",
+    fig.add_trace(
 
-        y="Risiko Mental",
+        go.Bar(
 
-        color="Status",
+            x=["Penggunaan Rendah"],
 
-        text="Risiko Mental",
+            y=[3.4],
 
-        color_discrete_map={
+            name="Stabil",
 
-            "Stabil": "#22c55e",
+            marker_color="#22c55e",
 
-            "Perlu Perhatian": "#f59e0b",
+            text=["3.4"],
 
-            "Risiko Tinggi": "#ef4444"
-        }
+            textposition="outside"
+        )
+    )
+
+    fig.add_trace(
+
+        go.Bar(
+
+            x=["Penggunaan Sedang"],
+
+            y=[5.5],
+
+            name="Perlu Perhatian",
+
+            marker_color="#f59e0b",
+
+            text=["5.5"],
+
+            textposition="outside"
+        )
+    )
+
+    fig.add_trace(
+
+        go.Bar(
+
+            x=["Penggunaan Tinggi"],
+
+            y=[7.8],
+
+            name="Risiko Tinggi",
+
+            marker_color="#ef4444",
+
+            text=["7.8"],
+
+            textposition="outside"
+        )
     )
 
     # =====================================================
-    # CUSTOM LAYOUT
+    # LAYOUT
     # =====================================================
 
     fig.update_layout(
+        barmode="group",
+        title={
+            "text":
+            "📱 Pengaruh Aktivitas Digital terhadap Kondisi Mental",
 
-        title="📱 Pengaruh Aktivitas Digital terhadap Kondisi Mental",
+            "x": 0.02,
 
-        plot_bgcolor="#111827",
+            "font": {
+                "size": 22
+            }
+        },
 
         paper_bgcolor="#111827",
 
-        font=dict(
+        plot_bgcolor="#111827",
 
-            color="white",
+        font={
+            "color": "white",
+            "size": 14
+        },
 
-            size=14
+        height=420,
+
+        margin=dict(
+            t=70,
+            l=20,
+            r=20,
+            b=20
         ),
 
-        xaxis_title="Kategori Aktivitas Digital",
+        xaxis=dict(
 
-        yaxis_title="Estimasi Risiko Kelelahan",
+            title="Kategori Aktivitas",
 
-        title_font_size=22,
+            showgrid=False
+        ),
 
-        height=500
+        yaxis=dict(
+
+            title="Estimasi Risiko",
+
+            range=[0,10],
+
+            gridcolor="rgba(255,255,255,0.08)"
+        )
     )
 
     # =====================================================
-    # BAR STYLE
+    # THRESHOLD LINE
     # =====================================================
 
-    fig.update_traces(
+    fig.add_hline(
 
-        texttemplate='%{text:.1f}',
+        y=5,
 
-        textposition='outside',
+        line_dash="dash",
 
-        marker_line_width=0
+        line_color="#22c55e",
+
+        annotation_text="Batas Stabil",
+
+        annotation_position="top right"
     )
 
     # =====================================================
     # SHOW CHART
     # =====================================================
 
-    fig.add_hline(
-
-    y=5,
-
-    line_dash="dash",
-
-    line_color="#22c55e",
-
-    annotation_text="Batas Kondisi Stabil"
-    )
     st.plotly_chart(
 
         fig,
 
-        use_container_width=True
+        use_container_width=True,
+
+        config={
+            'displayModeBar': False
+        }
     )
     
     st.markdown("---")
@@ -2338,6 +2415,189 @@ elif menu == "📈 Journey":
         st.success("""
         Mood Journal berhasil disimpan.
         """)
+
+# =====================================================
+# AI FACE CHECK
+# =====================================================
+
+elif menu == "👁 Face Check":
+
+    # IMPORT DI SINI
+    from deepface import DeepFace
+    from PIL import Image
+    import numpy as np
+
+    st.title("😊 Facial Mood & Fatigue Check")
+
+    st.markdown("""
+
+    Ekspresikan wajah Anda untuk mendeteksi
+    indikasi kelelahan penggunaan digital,
+    stres ringan,
+    dan kondisi wellness Anda.
+
+    """)
+
+    picture = st.camera_input(
+        "📷 Posisikan wajah Anda di depan kamera"
+    )
+
+    if picture is not None:
+
+        image = Image.open(picture)
+
+        img_array = np.array(image)
+
+        st.image(
+            image,
+            width=250
+        )
+
+        with st.spinner(
+            "🔍 Sistem sedang menganalisis..."
+        ):
+
+            result = DeepFace.analyze(
+
+            img_array,
+
+            actions=['emotion'],
+
+            detector_backend='opencv',
+
+            enforce_detection=False,
+
+            silent=True
+        )
+
+            emotion = result[0]['dominant_emotion']
+
+
+        # =============================================
+        # RECOVERA AI INTERPRETATION
+        # =============================================
+
+        confidence = result[0]['emotion'][emotion]
+
+        if emotion == "happy":
+
+            emotion_label = "😊 Happy"
+            fatigue = "Rendah"
+            color = "#22c55e"
+
+            message = """
+            Berdasarkan hasil ekspresi wajah Anda,
+            tidak terdapat indikasi digital fatigue
+            berlebihan maupun gejala frustrasi.
+
+            Kondisi emosional terlihat cukup positif,
+            stabil, dan fokus masih terjaga dengan baik.
+            """
+
+        elif emotion == "neutral":
+
+            emotion_label = "😐 Neutral"
+            fatigue = "Sedang"
+            color = "#f59e0b"
+
+            message = """
+            Ekspresi wajah terlihat netral dan stabil,
+            namun sistem mendeteksi kemungkinan
+            kelelahan ringan akibat aktivitas digital.
+
+            Disarankan menjaga recovery dan kualitas tidur.
+            """
+
+        elif emotion == "sad":
+
+            emotion_label = "😔 Sad"
+            fatigue = "Tinggi"
+            color = "#ef4444"
+
+            message = """
+            Sistem mendeteksi indikasi kelelahan emosional
+            atau tekanan mental ringan.
+
+            Kurangi overstimulasi digital dan
+            berikan waktu recovery yang cukup.
+            """
+
+        elif emotion == "angry":
+
+            emotion_label = "😠 Frustrated"
+            fatigue = "Tinggi"
+            color = "#fb7185"
+
+            message = """
+            Terdapat indikasi frustrasi atau stres ringan
+            berdasarkan ekspresi wajah yang terdeteksi.
+
+            Disarankan mengurangi screen time
+            dan melakukan recovery mental.
+            """
+
+        else:
+
+            emotion_label = "🙂 Stabil"
+            fatigue = "Rendah"
+            color = "#38bdf8"
+
+            message = """
+            Kondisi emosional terlihat cukup stabil
+            dan tidak terdapat indikasi fatigue berlebihan.
+            """
+
+        # =============================================
+        # OUTPUT CARD
+        # =============================================
+
+        st.markdown(f"""
+
+        <div style="
+            background:#111827;
+            padding:25px;
+            border-radius:24px;
+            border-left:6px solid {color};
+            margin-top:20px;
+        ">
+
+        <h2 style="color:white;">
+
+        🧠 Emotion Detection:
+        {emotion_label}
+
+        </h2>
+
+        <h1 style="color:{color};">
+
+        Fatigue Level:
+        {fatigue}
+        
+        <h3 style="
+            color:white;
+            margin-top:10px;
+        ">
+
+        Confidence:
+        {confidence:.1f}%
+
+        </h3>
+
+        </h1>
+
+        <p style="
+            color:#D1D5DB;
+            font-size:17px;
+            line-height:1.8;
+        ">
+
+        {message}
+
+        </p>
+
+        </div>
+
+        """, unsafe_allow_html=True)
     
 # =========================================================
 # TAB 5
