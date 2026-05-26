@@ -439,8 +439,9 @@ model = joblib.load(
 @st.cache_resource
 def load_fer_model():
 
-    return FER(mtcnn=True)
+    return FER()
 
+detector = load_fer()
 # =========================================================
 # CUSTOM CSS
 # =========================================================
